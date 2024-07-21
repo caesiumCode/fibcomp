@@ -1,5 +1,11 @@
 #include "fibonacci_lin.hpp"
 
+FibonacciLin::FibonacciLin()
+: Fibonacci("lineaire", false)
+{
+    
+}
+
 uintinf_t FibonacciLin::run(uint64_t n)
 {
     uintinf_t F0(0);

@@ -89,11 +89,10 @@ uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
     std::size_t y_len = y.m_digits.size();
     
     uintinf_t z(0);
-    z.m_digits.reserve(x_len + y_len);
-    z.m_digits.resize(x_len + y_len - 1, 0);
+    z.m_digits.resize(x_len + y_len, 0);
     
     uint64_t carry = 0;
-    for (std::size_t j = 0; j < y_len - 1; j++)
+    for (std::size_t j = 0; j < y_len; j++)
     {
         carry = 0;
         for (std::size_t i = 0; i < x_len; i++)
@@ -106,16 +105,33 @@ uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
         z.m_digits[x_len+j] = carry;
     }
     
-    std::size_t j = y_len-1;
-    carry = 0;
-    for (std::size_t i = 0; i < x_len; i++)
+    if (carry == 0) z.m_digits.resize(x_len + y_len - 1);
+    
+    return z;
+}
+
+uintinf_t square(const uintinf_t& x)
+{
+    std::size_t x_len = x.m_digits.size();
+    
+    uintinf_t z(0);
+    z.m_digits.resize(2 * x_len, 0);
+    
+    uint64_t carry = 0;
+    for (std::size_t j = 0; j < x_len; j++)
     {
-        __uint128_t overflow = __uint128_t(z.m_digits[i+j]) + __uint128_t(x.m_digits[i]) * __uint128_t(y.m_digits[j]) + __uint128_t(carry);
-        
-        z.m_digits[i+j] = (overflow &  uintinf_t::max_digit);
-        carry           = (overflow >> uintinf_t::log2_base);
+        carry = 0;
+        for (std::size_t i = 0; i < x_len; i++)
+        {
+            __uint128_t overflow = __uint128_t(z.m_digits[i+j]) + __uint128_t(x.m_digits[i]) * __uint128_t(x.m_digits[j]) + __uint128_t(carry);
+            
+            z.m_digits[i+j] = (overflow &  uintinf_t::max_digit);
+            carry           = (overflow >> uintinf_t::log2_base);
+        }
+        z.m_digits[x_len+j] += carry;
     }
-    if (carry) z.m_digits.push_back(carry);
+    
+    if (carry == 0) z.m_digits.resize(2 * x_len - 1);
     
     return z;
 }

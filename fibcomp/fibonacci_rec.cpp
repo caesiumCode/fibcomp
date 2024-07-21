@@ -1,5 +1,11 @@
 #include "fibonacci_rec.hpp"
 
+FibonacciRec::FibonacciRec()
+: Fibonacci("recursif-naif", true)
+{
+    
+}
+
 uintinf_t FibonacciRec::run(uint64_t n)
 {
     if      (n == 0) return 0;

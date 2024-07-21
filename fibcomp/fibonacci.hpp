@@ -6,9 +6,13 @@
 class Fibonacci
 {
 public:
-    Fibonacci() = default;
+    Fibonacci(std::string, bool);
     
     virtual uintinf_t run(uint64_t) = 0;
+    
+public:
+    const std::string   name;
+    const bool          slow;
 };
 
 #endif /* fibonacci_hpp */

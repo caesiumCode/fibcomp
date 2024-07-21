@@ -1,13 +1,15 @@
-//
-//  fibonacci_flatmat.hpp
-//  fibcomp
-//
-//  Created by Stephen Jaud on 21/07/2024.
-//
-
 #ifndef fibonacci_flatmat_hpp
 #define fibonacci_flatmat_hpp
 
-#include <stdio.h>
+#include "fibonacci.hpp"
+
+
+class FibonacciFlatmat : public Fibonacci
+{
+public:
+    FibonacciFlatmat();
+    
+    uintinf_t run(uint64_t);    
+};
 
 #endif /* fibonacci_flatmat_hpp */

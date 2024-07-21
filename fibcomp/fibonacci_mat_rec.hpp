@@ -1,13 +1,14 @@
-//
-//  fibonacci_mat_rec.hpp
-//  fibcomp
-//
-//  Created by Stephen Jaud on 21/07/2024.
-//
-
 #ifndef fibonacci_mat_rec_hpp
 #define fibonacci_mat_rec_hpp
 
-#include <stdio.h>
+#include "fibonacci_mat.hpp"
+
+class FibonacciMatRec : public FibonacciMat
+{
+public:
+    FibonacciMatRec();
+        
+    FibMat power(const FibMat&, uint64_t);
+};
 
 #endif /* fibonacci_mat_rec_hpp */

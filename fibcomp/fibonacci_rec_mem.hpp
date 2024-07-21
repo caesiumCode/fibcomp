@@ -6,7 +6,7 @@
 class FibonacciRecMem : public Fibonacci
 {
 public:
-    FibonacciRecMem() = default;
+    FibonacciRecMem();
     
     uintinf_t run(uint64_t);
     

@@ -6,7 +6,7 @@
 class FibonacciRec : public Fibonacci
 {
 public:
-    FibonacciRec() = default;
+    FibonacciRec();
     
     uintinf_t run(uint64_t);
 };

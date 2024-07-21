@@ -1,5 +1,11 @@
 #include "fibonacci_rec_mem.hpp"
 
+FibonacciRecMem::FibonacciRecMem()
+: Fibonacci("recursif-mem", false)
+{
+    
+}
+
 uintinf_t FibonacciRecMem::run(uint64_t n)
 {
     std::vector<uintinf_t> cache(n+1, 0);

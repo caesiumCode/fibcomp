@@ -6,7 +6,7 @@
 class FibonacciLin : public Fibonacci
 {
 public:
-    FibonacciLin() = default;
+    FibonacciLin();
     
     uintinf_t run(uint64_t);
 };
