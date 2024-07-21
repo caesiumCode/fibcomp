@@ -5,6 +5,7 @@
 #include "fibonacci_rec.hpp"
 #include "fibonacci_rec_mem.hpp"
 #include "fibonacci_lin.hpp"
+#include "fibonacci_mat.hpp"
 
 double running_time(Fibonacci& algo, uint64_t n)
 {
@@ -44,7 +45,7 @@ int main(int argc, const char * argv[])
     
     std::cout << std::setw(20) << "ALGORITHME" << " |" << std::setw(10) << "MAX N" << std::endl;
     std::cout << std::string(32, '-') << std::endl;
-    
+    /*
     FibonacciRec algo_rec;
     std::cout << std::setw(20) << "recursif-naif" << " |" << std::setw(10) << search_threshold(algo_rec, time_limit, true) << std::endl;
     
@@ -53,6 +54,11 @@ int main(int argc, const char * argv[])
     
     FibonacciLin algo_lin;
     std::cout << std::setw(20) << "lineaire" << " |" << std::setw(10) << search_threshold(algo_lin, time_limit) << std::endl;
+     */
+    
+    FibonacciMat algo_mat;
+    std::cout << std::setw(20) << "matrice" << " |" << std::setw(10) << search_threshold(algo_mat, time_limit) << std::endl;
+    //std::cout << algo_mat.run(100).to_string() << std::endl;
     
     return EXIT_SUCCESS;
 }
