@@ -8,7 +8,8 @@
 #include "fibonacci_lin.hpp"
 #include "fibonacci_mat_rec.hpp"
 #include "fibonacci_mat_loop.hpp"
-#include "fibonacci_flatmat.hpp"
+#include "fibonacci_fmat.hpp"
+#include "fibonacci_fmat_mem.hpp"
 
 double running_time(Fibonacci& algo, uint64_t n)
 {
@@ -53,18 +54,21 @@ int main(int argc, const char * argv[])
     
     std::vector<std::shared_ptr<Fibonacci>> algos;
     
-    //algos.push_back(std::make_shared<FibonacciRec>());
+    algos.push_back(std::make_shared<FibonacciRec>());
     //algos.push_back(std::make_shared<FibonacciRecMem>());
-    //algos.push_back(std::make_shared<FibonacciLin>());
-    //algos.push_back(std::make_shared<FibonacciMatRec>());
-    //algos.push_back(std::make_shared<FibonacciMatLoop>());
-    algos.push_back(std::make_shared<FibonacciFlatmat>());
+    algos.push_back(std::make_shared<FibonacciLin>());
+    algos.push_back(std::make_shared<FibonacciMatRec>());
+    algos.push_back(std::make_shared<FibonacciMatLoop>());
+    algos.push_back(std::make_shared<FibonacciFmat>());
+    algos.push_back(std::make_shared<FibonacciFmatMem>());
     
     std::cout << std::setw(20) << "ALGORITHME" << " |" << std::setw(10) << "MAX N" << std::endl;
     std::cout << std::string(32, '-') << std::endl;
     for (std::shared_ptr<Fibonacci> algo : algos) disp_search(*algo.get(), time_limit);
     
-    //std::cout << algo_flatmat.run(1000).to_string() << std::endl;
+    //FibonacciFmatMem algo;
+    //uintinf_t F = algo.run(4306932);
+    //std::cout << algo.run(1000).to_string() << std::endl;
     
     return EXIT_SUCCESS;
 }

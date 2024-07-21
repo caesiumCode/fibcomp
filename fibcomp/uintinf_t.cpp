@@ -110,6 +110,23 @@ uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
     return z;
 }
 
+uintinf_t doubling(uintinf_t x)
+{
+    uint64_t mask = uint64_t(1) << 63;
+    
+    if (x.m_digits.back() & mask) x.m_digits.push_back(1);
+    
+    for (std::size_t i = x.m_digits.size()-1; i > 0; i--)
+    {
+        x.m_digits[i] <<= 1;
+        x.m_digits[i] += (x.m_digits[i-1] >> 63);
+    }
+    
+    x.m_digits[0] <<= 1;
+    
+    return x;
+}
+
 uintinf_t square(const uintinf_t& x)
 {
     std::size_t x_len = x.m_digits.size();

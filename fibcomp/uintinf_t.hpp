@@ -16,9 +16,11 @@ public:
     
     uintinf_t& operator+=(const uintinf_t&);
     //uintinf_t& operator*=(const uintinf_t&);
-    friend uintinf_t  operator+(      uintinf_t,  const uintinf_t&);
-    friend uintinf_t  operator*(const uintinf_t&, const uintinf_t&);
-    friend uintinf_t  square   (const uintinf_t&);
+    friend uintinf_t operator+(      uintinf_t,  const uintinf_t&);
+    friend uintinf_t operator*(const uintinf_t&, const uintinf_t&);
+    
+    friend uintinf_t doubling(uintinf_t);
+    friend uintinf_t square  (const uintinf_t&);
     
     friend void swap(uintinf_t&, uintinf_t&);
     
