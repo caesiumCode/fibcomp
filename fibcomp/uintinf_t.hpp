@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 class uintinf_t
 {
@@ -15,12 +16,21 @@ public:
     bool is_zero();
     
     uintinf_t& operator+=(const uintinf_t&);
-    //uintinf_t& operator*=(const uintinf_t&);
+    uintinf_t& operator-=(const uintinf_t&);
     friend uintinf_t operator+(      uintinf_t,  const uintinf_t&);
+    friend uintinf_t operator-(      uintinf_t,  const uintinf_t&);
     friend uintinf_t operator*(const uintinf_t&, const uintinf_t&);
+    friend uintinf_t operator*(      uint64_t,         uintinf_t);
     
-    friend uintinf_t doubling(uintinf_t);
-    friend uintinf_t square  (const uintinf_t&);
+    friend uintinf_t long_multiplication(const std::vector<uint64_t>&, const std::vector<uint64_t>&);
+    friend uintinf_t long_squaring      (const std::vector<uint64_t>&);
+    
+    void doubling();
+    void halving();
+    
+    friend uintinf_t twice(uintinf_t);
+    friend uintinf_t half(uintinf_t);
+    friend uintinf_t square(const uintinf_t&);
     
     friend void swap(uintinf_t&, uintinf_t&);
     

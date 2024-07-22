@@ -14,6 +14,6 @@ uintinf_t FibonacciFmat::run(uint64_t n)
     else
     {
         uintinf_t Fn = run(n/2);
-        return (doubling(run(n/2 - 1)) + Fn) * Fn;
+        return (twice(run(n/2 - 1)) + Fn) * Fn;
     }
 }
