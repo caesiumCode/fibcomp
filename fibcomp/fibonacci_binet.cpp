@@ -6,6 +6,13 @@ FibonacciBinet::FibonacciBinet()
     
 }
 
+BinetCouple::BinetCouple(BinetCoupleSmall binet)
+: a(binet.a)
+, b(binet.b)
+{
+    
+}
+
 void BinetCouple::halving()
 {
     a.halving();
@@ -14,27 +21,75 @@ void BinetCouple::halving()
 
 void BinetCouple::special_halving()
 {
-    uintinf_t tmp = half(half(a + b));
+    uintinf_t tmp = a + b;
+    tmp.fourthing();
     
     a = tmp + b;
     b = tmp;
 }
 
-BinetCouple operator*(const BinetCouple& A, const BinetCouple& B)
+BinetCouple operator*(BinetCouple A, const BinetCouple& B)
 {
-    return {A.a*B.a + (uint64_t(5)*A.b)*B.b, A.a*B.b + A.b*B.a};
+    uintinf_t AbBb = A.b*B.b;
+    uintinf_t z    = A.a*B.a;
+    z += AbBb;
+    
+    A.b  = (A.a + A.b)*(B.a + B.b);
+    A.b -= z;
+    
+    AbBb.quadrupling();
+    
+    A.a = z + AbBb;
+    
+    return A;
 }
 
-BinetCouple square(const BinetCouple& A)
+BinetCouple square(BinetCouple A)
 {
-    return {square(A.a) + uint64_t(5) * square(A.b), twice(A.a*A.b)};
+    uintinf_t b2 = square(A.b);
+    uintinf_t z = square(A.a);
+    z += b2;
+    
+    A.b  = square(A.a + A.b);
+    A.b -= z;
+    
+    b2.quadrupling();
+    
+    A.a = z + b2;
+    
+    return A;
 }
 
-BinetCouple binet_power(uint64_t n)
+BinetCoupleSmall binet_power_small(uint64_t n)
 {
     if      (n == 0) return {1, 0};
     else if (n == 1) return {1, 1};
     else if (n == 2) return {3, 1};
+    else
+    {
+        BinetCoupleSmall A = binet_power_small(n/2);
+        A = {A.a*A.a + 5*A.b*A.b, 2*A.a*A.b};
+        
+        if (n%2)
+        {
+            uint64_t tmp = (A.a + A.b) >> 2;
+            
+            A.a = tmp + A.b;
+            A.b = tmp;
+        }
+        else
+        {
+            A.a >>= 1;
+            A.b >>= 1;
+        }
+        
+        return A;
+    }
+}
+
+BinetCouple binet_power(uint64_t n)
+{
+    if (n <= 89) return binet_power_small(n);
     else
     {
         BinetCouple A = square(binet_power(n/2));

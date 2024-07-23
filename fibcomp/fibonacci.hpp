@@ -1,6 +1,8 @@
 #ifndef fibonacci_hpp
 #define fibonacci_hpp
 
+#include <iostream>
+
 #include "uintinf_t.hpp"
 
 class Fibonacci

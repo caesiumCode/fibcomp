@@ -10,6 +10,9 @@ public:
     FibonacciFmat();
     
     uintinf_t run(uint64_t);
+    
+private:
+    uint64_t run_small(uint64_t);
 };
 
 #endif /* fibonacci_fmat_hpp */

@@ -13,16 +13,26 @@ public:
     uintinf_t run(uint64_t);
 };
 
+struct BinetCoupleSmall
+{
+    uint64_t a;
+    uint64_t b;
+    
+    friend BinetCoupleSmall binet_power_small(uint64_t);
+};
+
 struct BinetCouple
 {
+    BinetCouple(BinetCoupleSmall);
+    
     uintinf_t a;
     uintinf_t b;
     
     void halving();
     void special_halving();
     
-    friend BinetCouple operator*(const BinetCouple&, const BinetCouple&);
-    friend BinetCouple square(const BinetCouple&);
+    friend BinetCouple operator*(BinetCouple, const BinetCouple&);
+    friend BinetCouple square(BinetCouple);
     friend BinetCouple binet_power(uint64_t);
 };
 

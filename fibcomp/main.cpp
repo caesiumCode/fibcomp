@@ -10,7 +10,9 @@
 #include "fibonacci_mat_loop.hpp"
 #include "fibonacci_fmat.hpp"
 #include "fibonacci_fmat_mem.hpp"
+#include "fibonacci_fmat_mem_hit.hpp"
 #include "fibonacci_binet.hpp"
+#include "fibonacci_fmat_triangle.hpp"
 
 BinetCouple binet_power(uint64_t);
 
@@ -61,22 +63,38 @@ int main(int argc, const char * argv[])
     //algos.push_back(std::make_shared<FibonacciRecMem>());
     //algos.push_back(std::make_shared<FibonacciLin>());
     //algos.push_back(std::make_shared<FibonacciMatRec>());
-    algos.push_back(std::make_shared<FibonacciMatLoop>());
-    //algos.push_back(std::make_shared<FibonacciFmat>());
+    //algos.push_back(std::make_shared<FibonacciMatLoop>());
+    algos.push_back(std::make_shared<FibonacciFmat>());
     algos.push_back(std::make_shared<FibonacciFmatMem>());
-    algos.push_back(std::make_shared<FibonacciBinet>());
+    algos.push_back(std::make_shared<FibonacciFmatMemHit>());
+    algos.push_back(std::make_shared<FibonacciFmatTriangle>());
+    //algos.push_back(std::make_shared<FibonacciBinet>());
     
     std::cout << std::setw(20) << "ALGORITHME" << " |" << std::setw(10) << "MAX N" << std::endl;
     std::cout << std::string(32, '-') << std::endl;
-    for (std::shared_ptr<Fibonacci> algo : algos) disp_search(*algo.get(), time_limit);
+    //for (std::shared_ptr<Fibonacci> algo : algos) disp_search(*algo.get(), time_limit);
 
-    
+    //FibonacciFmatTriangle algo;
+    /*
+    uint64_t n = 5000000;
+    std::cout << running_time(*algos[0].get(), n) << std::endl;
+    std::cout << running_time(*algos[1].get(), n) << std::endl;
+    std::cout << running_time(*algos[2].get(), n) << std::endl;
+    std::cout << running_time(*algos[3].get(), n) << std::endl;
+    */
     /*
     FibonacciLin algo;
-    std::cout << algo.run(1000).to_string() << std::endl;
+    std::cout << algo.run(94).to_string() << std::endl;
+     
+    
     FibonacciBinet algo2;
-    std::cout << algo2.run(1000).to_string() << std::endl;
+    std::cout << algo2.run(94).to_string() << std::endl;
     */
+    
+    /*
+    FibonacciFmatMem algo;
+    std::cout << running_time(algo, 13000000) << std::endl;
+     */
     
     /*
     uintinf_t x({15936873492946612855ul,9774062212524773964ul,17647631051235622973ul});

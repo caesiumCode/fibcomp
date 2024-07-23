@@ -22,11 +22,10 @@ public:
     friend uintinf_t operator*(const uintinf_t&, const uintinf_t&);
     friend uintinf_t operator*(      uint64_t,         uintinf_t);
     
-    friend uintinf_t long_multiplication(const std::vector<uint64_t>&, const std::vector<uint64_t>&);
-    friend uintinf_t long_squaring      (const std::vector<uint64_t>&);
-    
+    void quadrupling();
     void doubling();
     void halving();
+    void fourthing();
     
     friend uintinf_t twice(uintinf_t);
     friend uintinf_t half(uintinf_t);
@@ -43,6 +42,24 @@ public:
             
 private:
     std::vector<uint64_t> m_digits;
+    
+private:
+    static void relative_quadrupling(std::vector<uint64_t>&);
+    static void relative_doubling(std::vector<uint64_t>&);
+    static void relative_halving(std::vector<uint64_t>&);
+    static void relative_fourthing(std::vector<uint64_t>&);
+
+    static std::vector<uint64_t>& relative_long_add(std::vector<uint64_t>&, const std::vector<uint64_t>&);
+    static std::vector<uint64_t>& relative_long_sub(std::vector<uint64_t>&, const std::vector<uint64_t>&);
+
+    static std::vector<uint64_t> long_add  (std::vector<uint64_t>, const std::vector<uint64_t>&);
+    static std::vector<uint64_t> long_sub  (std::vector<uint64_t>, const std::vector<uint64_t>&);
+
+    static std::vector<uint64_t> kara_mult  (const std::vector<uint64_t>&, const std::vector<uint64_t>&);
+    static std::vector<uint64_t> kara_square(const std::vector<uint64_t>&);
+    static std::vector<uint64_t> scalar_mult(uint64_t, std::vector<uint64_t>);
+    static std::vector<uint64_t> long_mult  (const std::vector<uint64_t>&, const std::vector<uint64_t>&);
+    static std::vector<uint64_t> long_square(const std::vector<uint64_t>&);
 };
 
 #endif /* uintinf_t_hpp */
