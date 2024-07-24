@@ -20,7 +20,7 @@ FibMat FibonacciMatLoop::power(const FibMat& A, uint64_t n)
         while (mask > 0)
         {
             B = (n & mask) ? square(B) * A : square(B);
-            
+                        
             mask >>= 1;
         }
         

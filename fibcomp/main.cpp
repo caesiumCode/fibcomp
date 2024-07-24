@@ -55,41 +55,46 @@ void disp_search(Fibonacci& algo, double time_limit)
 
 int main(int argc, const char * argv[]) 
 {
-    double time_limit = 1;
+    //double time_limit = 1;
     
     std::vector<std::shared_ptr<Fibonacci>> algos;
     
-    //algos.push_back(std::make_shared<FibonacciRec>());
+    algos.push_back(std::make_shared<FibonacciRec>());
     //algos.push_back(std::make_shared<FibonacciRecMem>());
-    //algos.push_back(std::make_shared<FibonacciLin>());
-    //algos.push_back(std::make_shared<FibonacciMatRec>());
-    //algos.push_back(std::make_shared<FibonacciMatLoop>());
-    algos.push_back(std::make_shared<FibonacciFmat>());
+    algos.push_back(std::make_shared<FibonacciLin>());
+    algos.push_back(std::make_shared<FibonacciMatRec>());
+    algos.push_back(std::make_shared<FibonacciMatLoop>());
+    //algos.push_back(std::make_shared<FibonacciFmat>());
     algos.push_back(std::make_shared<FibonacciFmatMem>());
     algos.push_back(std::make_shared<FibonacciFmatMemHit>());
-    algos.push_back(std::make_shared<FibonacciFmatTriangle>());
-    //algos.push_back(std::make_shared<FibonacciBinet>());
+    //algos.push_back(std::make_shared<FibonacciFmatTriangle>());
+    algos.push_back(std::make_shared<FibonacciBinet>());
     
-    std::cout << std::setw(20) << "ALGORITHME" << " |" << std::setw(10) << "MAX N" << std::endl;
-    std::cout << std::string(32, '-') << std::endl;
+    //std::cout << std::setw(20) << "ALGORITHME" << " |" << std::setw(10) << "MAX N" << std::endl;
+    //std::cout << std::string(32, '-') << std::endl;
     //for (std::shared_ptr<Fibonacci> algo : algos) disp_search(*algo.get(), time_limit);
 
-    //FibonacciFmatTriangle algo;
     /*
-    uint64_t n = 5000000;
-    std::cout << running_time(*algos[0].get(), n) << std::endl;
-    std::cout << running_time(*algos[1].get(), n) << std::endl;
-    std::cout << running_time(*algos[2].get(), n) << std::endl;
-    std::cout << running_time(*algos[3].get(), n) << std::endl;
+    FibonacciFmatMem algo;
+    uint64_t n = 15000000;
+    double T = 0;
+    int N = 20;
+    for (int i = 0; i < N; i++)
+    {
+        double t = running_time(algo, n);
+        std::cout << t << std::endl;
+        T += t;
+    }
+    std::cout << "avg : " << T / double(N) << std::endl;
     */
-    /*
-    FibonacciLin algo;
-    std::cout << algo.run(94).to_string() << std::endl;
-     
     
-    FibonacciBinet algo2;
-    std::cout << algo2.run(94).to_string() << std::endl;
-    */
+    
+    FibonacciLin algo;
+    uintinf_t res_1 = algo.run(100000);
+    FibonacciMatLoop algo2;
+    uintinf_t res_2 = algo2.run(100000);
+
+    std::cout << (res_1.is_equal(res_2) ? "GOOD" : "BAD") << std::endl;
     
     /*
     FibonacciFmatMem algo;

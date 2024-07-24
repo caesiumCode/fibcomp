@@ -1,6 +1,8 @@
 #ifndef fibonacci_mat_hpp
 #define fibonacci_mat_hpp
 
+#include <iostream>
+
 #include "fibonacci.hpp"
 
 struct FibMat;

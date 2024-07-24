@@ -7,6 +7,13 @@
 #include <algorithm>
 #include <iostream>
 
+#include "grade_school.hpp"
+
+#define MULT_KARATSUBA
+#define MULT_KARATSUBA_CUTOFF 50
+#define MULT_MEM_OPT
+#define SQUARE_MEM_OPT
+
 class uintinf_t
 {
 public:
@@ -15,6 +22,8 @@ public:
     uintinf_t(const std::vector<uint64_t>&);
     
     bool is_zero();
+    
+    bool is_equal(const uintinf_t&);
     
     uintinf_t& operator+=(const uintinf_t&);
     uintinf_t& operator-=(const uintinf_t&);
@@ -66,9 +75,6 @@ private:
                             uint64_t* dest);
     static void kara_square(const uint64_t* x, const std::size_t x_len,
                             uint64_t* dest);
-    static void scalar_mult(const uint64_t scalar,
-                            const uint64_t* x, const std::size_t x_len,
-                            uint64_t* dest);
 
     
     static void relative_quadrupling(std::vector<uint64_t>&);
@@ -76,17 +82,9 @@ private:
     static void relative_halving(std::vector<uint64_t>&);
     static void relative_fourthing(std::vector<uint64_t>&);
 
-    static std::vector<uint64_t>& relative_long_add(std::vector<uint64_t>&, const std::vector<uint64_t>&);
-    static std::vector<uint64_t>& relative_long_sub(std::vector<uint64_t>&, const std::vector<uint64_t>&);
-
-    static std::vector<uint64_t> long_add  (std::vector<uint64_t>, const std::vector<uint64_t>&);
-    static std::vector<uint64_t> long_sub  (std::vector<uint64_t>, const std::vector<uint64_t>&);
-
     static std::vector<uint64_t> kara_mult  (const std::vector<uint64_t>&, const std::vector<uint64_t>&);
     static std::vector<uint64_t> kara_square(const std::vector<uint64_t>&);
-    static std::vector<uint64_t> scalar_mult(uint64_t, std::vector<uint64_t>);
-    static std::vector<uint64_t> long_mult  (const std::vector<uint64_t>&, const std::vector<uint64_t>&);
-    static std::vector<uint64_t> long_square(const std::vector<uint64_t>&);
 };
+
 
 #endif /* uintinf_t_hpp */
