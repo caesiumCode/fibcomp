@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <iostream>
 
 class uintinf_t
 {
@@ -44,6 +45,32 @@ private:
     std::vector<uint64_t> m_digits;
     
 private:
+    // Assume destination is big enough to store overflow
+    // Assume pure destination is filled with zeros
+    static void relative_long_add(      uint64_t* x, const std::size_t x_len,
+                                  const uint64_t* y, const std::size_t y_len);
+    static void relative_long_sub(      uint64_t* x, const std::size_t x_len,
+                                  const uint64_t* y, const std::size_t y_len);
+    
+    static void long_add(const  uint64_t* x, const std::size_t x_len,
+                         const  uint64_t* y, const std::size_t y_len,
+                         uint64_t* dest);
+    
+    static void long_mult(const uint64_t* x, const std::size_t x_len,
+                          const uint64_t* y, const std::size_t y_len,
+                          uint64_t* dest);
+    static void kara_mult(const uint64_t* x, const std::size_t x_len,
+                          const uint64_t* y, const std::size_t y_len,
+                          uint64_t* dest);
+    static void long_square(const uint64_t* x, const std::size_t x_len,
+                            uint64_t* dest);
+    static void kara_square(const uint64_t* x, const std::size_t x_len,
+                            uint64_t* dest);
+    static void scalar_mult(const uint64_t scalar,
+                            const uint64_t* x, const std::size_t x_len,
+                            uint64_t* dest);
+
+    
     static void relative_quadrupling(std::vector<uint64_t>&);
     static void relative_doubling(std::vector<uint64_t>&);
     static void relative_halving(std::vector<uint64_t>&);

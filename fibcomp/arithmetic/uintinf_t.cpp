@@ -1,7 +1,7 @@
 #include "uintinf_t.hpp"
 
 #define MULT_KARATSUBA
-#define MULT_KARATSUBA_CUTOFF 70 // same as in CPython (https://github.com/python/cpython/blob/main/Objects/longobject.c#L73)
+#define MULT_KARATSUBA_CUTOFF 50 // same as in CPython (https://github.com/python/cpython/blob/main/Objects/longobject.c#L73)
 
 uintinf_t::uintinf_t()
 : m_digits({0})
@@ -125,6 +125,26 @@ uint64_t uintinf_t::to_uint64() const
     return (m_digits.empty() ? 0 : m_digits[0]);
 }
 
+void uintinf_t::relative_long_add(      uint64_t* x, const std::size_t x_len,
+                                  const uint64_t* y, const std::size_t y_len)
+{
+    std::size_t i = 0;
+    uint64_t carry = 0;
+    for (i = 0; i < y_len; i++)
+    {
+        uint64_t plus = y[i] + carry;
+        x[i] += plus;
+        
+        carry = (carry ? x[i] <= y[i] : x[i] < y[i]);
+    }
+    
+    for (; i < x_len; i++)
+    {
+        x[i] += carry;
+        
+        carry = (x[i] < carry);
+    }
+}
 
 std::vector<uint64_t>& uintinf_t::relative_long_add(std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
 {
@@ -157,9 +177,49 @@ std::vector<uint64_t>& uintinf_t::relative_long_add(std::vector<uint64_t>& x, co
     return x;
 }
 
+void uintinf_t::long_add(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
+{
+    std::size_t i = 0;
+    uint64_t carry = 0;
+    for (i = 0; i < y_len; i++)
+    {
+        uint64_t plus = x[i] + y[i] + carry;
+        dest[i] = plus;
+        
+        carry = (carry ? dest[i] <= y[i] : dest[i] < y[i]);
+    }
+    
+    for (; i < x_len; i++)
+    {
+        dest[i] = x[i] + carry;
+        
+        carry = (dest[i] < carry);
+    }
+}
+
 std::vector<uint64_t> uintinf_t::long_add(std::vector<uint64_t> x, const std::vector<uint64_t>& y)
 {
     return relative_long_add(x, y);
+}
+
+void uintinf_t::relative_long_sub(      uint64_t* x, const std::size_t x_len,
+                                  const uint64_t* y, const std::size_t y_len)
+{
+    std::size_t i = 0;
+    uint64_t borrow = 0;
+    for (i = 0; i < y_len && i < x_len; i++)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        x[i] -= minus;
+    }
+    
+    for (; i < x_len; i++)
+    {
+        x[i] -= borrow;
+                
+        borrow = borrow && (x[i] == uintinf_t::max_digit);
+    }
 }
 
 std::vector<uint64_t>& uintinf_t::relative_long_sub(std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
@@ -198,6 +258,20 @@ std::vector<uint64_t> uintinf_t::long_sub(std::vector<uint64_t> x, const std::ve
     return relative_long_sub(x, y);
 }
 
+void uintinf_t::scalar_mult(const uint64_t scalar,
+                            const uint64_t* x, const std::size_t x_len,
+                            uint64_t* dest)
+{
+    uint64_t carry = 0;
+    for (std::size_t i = 0; i < x_len; i++)
+    {
+        __uint128_t overflow = __uint128_t(scalar) * __uint128_t(x[i]) + __uint128_t(carry);
+        
+        dest[i] = (overflow &  uintinf_t::max_digit);
+        carry   = (overflow >> uintinf_t::log2_base);
+    }
+}
+
 std::vector<uint64_t> uintinf_t::scalar_mult(uint64_t scalar, std::vector<uint64_t> x)
 {
     if (scalar == 0) x.resize(1);
@@ -216,12 +290,31 @@ std::vector<uint64_t> uintinf_t::scalar_mult(uint64_t scalar, std::vector<uint64
     return x;
 }
 
+void uintinf_t::long_mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
+{
+    if ((x[0] == 0 && x_len == 1) || (y[0] == 0 && y_len == 1)) return;
+    
+    uint64_t carry = 0;
+    for (std::size_t j = 0; j < y_len; j++)
+    {
+        carry = 0;
+        for (std::size_t i = 0; i < x_len; i++)
+        {
+            __uint128_t overflow = __uint128_t(dest[i+j]) + __uint128_t(x[i]) * __uint128_t(y[j]) + __uint128_t(carry);
+            
+            dest[i+j] = (overflow &  uintinf_t::max_digit);
+            carry     = (overflow >> uintinf_t::log2_base);
+        }
+        dest[x_len+j] = carry;
+    }
+}
+
 std::vector<uint64_t> uintinf_t::long_mult(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
 {
-    if (x[0] == 0 || y[0] == 0) return {0};
-    
     std::size_t x_len = x.size();
     std::size_t y_len = y.size();
+    
+    if ((x[0] == 0 && x_len == 1) || (y[0] == 0 && y_len == 1)) return {0};
     
     std::vector<uint64_t> z(x_len + y_len, 0);
     
@@ -244,12 +337,82 @@ std::vector<uint64_t> uintinf_t::long_mult(const std::vector<uint64_t>& x, const
     return z;
 }
 
+void uintinf_t::kara_mult(const uint64_t *x, const std::size_t x_len, const uint64_t *y, const std::size_t y_len, uint64_t *dest)
+{
+    if ((x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return;
+    if (x_len == 1) scalar_mult(x[0], y, y_len, dest);
+    if (y_len == 1) scalar_mult(y[0], x, x_len, dest);
+    if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) long_mult(x, x_len, y, y_len, dest);
+    else
+    {
+        std::size_t split = std::max(x_len, y_len) >> 1;
+        std::size_t x_lim = std::min(split, x_len);
+        std::size_t y_lim = std::min(split, y_len);
+        
+        uint64_t* z_lo = dest;
+        uint64_t* z_hi = dest + (2*split);
+        
+        std::size_t z_lo_len = x_lim + y_lim;
+        std::size_t z_hi_len = 2*x_len - x_lim - y_lim;
+        
+        kara_mult(x,        x_lim,          y,          y_lim,       z_lo); // z_lo = x_lo * y_lo
+        kara_mult(x+x_lim,  x_len-x_lim,    y+y_lim,    y_len-y_lim, z_hi); // z_hi = x_hi * y_hi
+        
+        z_lo_len -= (z_lo[z_lo_len-1] == 0);
+        z_hi_len -= (z_hi[z_hi_len-1] == 0);
+        
+        std::vector<uint64_t> x_plus(std::max(x_lim, x_len-x_lim) + 1, 0);
+        std::vector<uint64_t> y_plus(std::max(y_lim, y_len-y_lim) + 1, 0);
+        
+        long_add(x, x_lim, x+x_lim, x_len-x_lim, x_plus.data()); // x_lo + x_hi
+        long_add(y, y_lim, y+y_lim, y_len-y_lim, y_plus.data()); // y_lo + y_hi
+        
+        if (x_plus.back() == 0) x_plus.resize(x_plus.size()-1);
+        if (y_plus.back() == 0) y_plus.resize(y_plus.size()-1);
+        
+        std::vector<uint64_t> z_mi(x_plus.size() + y_plus.size(), 0);
+        kara_mult(x_plus.data(), x_plus.size(), y_plus.data(), y_plus.size(), z_mi.data()); // (x_lo + x_hi) * (y_lo + y_hi)
+        
+        relative_long_sub(z_mi.data(), z_mi.size(), z_lo, z_lo_len); // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
+        relative_long_sub(z_mi.data(), z_mi.size(), z_hi, z_hi_len); // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
+        
+        std::size_t z_mi_len = z_mi.size();
+        while (z_mi[z_mi_len-1] == 0 && z_mi_len > 1) z_mi_len--;
+        z_mi.resize(z_mi_len);
+        
+        relative_long_add(z_mi.data(), z_mi_len, dest        + split, split);
+        if (z_mi_len > split) relative_long_add(z_hi,        z_hi_len, z_mi.data() + split, z_mi_len - split);
+        
+        std::copy(z_mi.data(), z_mi.data() + std::min(split, z_mi_len), dest + split);
+    }
+}
+
 std::vector<uint64_t> uintinf_t::kara_mult(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
 {
+    
     std::size_t x_len = x.size();
     std::size_t y_len = y.size();
     
-    if (x[0] == 0 || y[0] == 0) return {0};
+    if ((x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return {0};
+    if (x_len == 1) return scalar_mult(x[0], y);
+    if (y_len == 1) return scalar_mult(y[0], x);
+    if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) return long_mult(x, y);
+    
+    
+    std::vector<uint64_t> z(x.size() + y.size(), 0);
+    
+    kara_mult(x.data(), x.size(), y.data(), y.size(), z.data());
+    
+    if (z.back() == 0) z.resize(z.size()-1);
+    
+    return z;
+    
+    
+    /*
+    std::size_t x_len = x.size();
+    std::size_t y_len = y.size();
+    
+    if ((x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return {0};
     if (x_len == 1) return scalar_mult(x[0], y);
     if (y_len == 1) return scalar_mult(y[0], x);
     if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) return long_mult(x, y);
@@ -280,10 +443,59 @@ std::vector<uint64_t> uintinf_t::kara_mult(const std::vector<uint64_t>& x, const
     z.resize(len);
     
     return z;
+     */
+}
+
+void uintinf_t::kara_square(const uint64_t *x, const std::size_t x_len, uint64_t *dest)
+{
+    if (x_len == 1 && x[0] == 0) return;
+    if (x_len <= MULT_KARATSUBA_CUTOFF) long_square(x, x_len, dest);
+    else
+    {
+        std::size_t x_lim = x_len >> 1;
+        
+        uint64_t* z_lo = dest;
+        uint64_t* z_hi = dest + (2*x_lim);
+        
+        std::size_t z_lo_len = 2*x_lim;
+        std::size_t z_hi_len = 2*(x_len - x_lim);
+        
+        kara_square(x,        x_lim,       z_lo); // z_lo = x_lo * x_lo
+        kara_square(x+x_lim,  x_len-x_lim, z_hi); // z_hi = x_hi * x_hi
+        
+        z_lo_len -= (z_lo[z_lo_len-1] == 0);
+        z_hi_len -= (z_hi[z_hi_len-1] == 0);
+        
+        std::vector<uint64_t> z_mi(x_len, 0);
+        kara_mult(x, x_lim, x+x_lim, x_len-x_lim, z_mi.data()); // x_lo * x_hi
+        if (z_mi.back() == 0 && z_mi.size() > 1) z_mi.resize(z_mi.size()-1);
+        relative_doubling(z_mi); // z_mi = 2 * x_lo * x_hi
+        std::size_t z_mi_len = z_mi.size();
+        
+                              relative_long_add(z_mi.data(), z_mi_len, dest        + x_lim, x_lim);
+        if (z_mi_len > x_lim) relative_long_add(z_hi,        z_hi_len, z_mi.data() + x_lim, z_mi_len - x_lim);
+        
+        std::copy(z_mi.data(), z_mi.data() + std::min(x_lim, z_mi_len), dest + x_lim);
+    }
 }
 
 std::vector<uint64_t> uintinf_t::kara_square(const std::vector<uint64_t>& x)
 {
+    std::size_t x_len = x.size();
+    
+    if (x_len == 1 && x[0] == 0) return {0};
+    if (x_len <= MULT_KARATSUBA_CUTOFF) return long_square(x);
+    
+    
+    std::vector<uint64_t> z(2*x.size(), 0);
+    
+    kara_square(x.data(), x.size(), z.data());
+    
+    if (z.back() == 0) z.resize(z.size()-1);
+    
+    return z;
+    
+    /*
     std::size_t x_len = x.size();
     
     if (x[0] == 0) return {0};
@@ -298,7 +510,7 @@ std::vector<uint64_t> uintinf_t::kara_square(const std::vector<uint64_t>& x)
     std::vector<uint64_t> z_lo = kara_square(x_lo);
     std::vector<uint64_t> z_mi = kara_mult(x_lo, x_hi);
     relative_doubling(z_mi);
-    
+
     relative_long_add(z_mi, std::vector<uint64_t>(z_lo.begin() + std::min(split, z_lo.size()), z_lo.end()));
     relative_long_add(z_hi, std::vector<uint64_t>(z_mi.begin() + std::min(split, z_mi.size()), z_mi.end()));
     
@@ -312,6 +524,26 @@ std::vector<uint64_t> uintinf_t::kara_square(const std::vector<uint64_t>& x)
     z.resize(len);
     
     return z;
+     */
+}
+
+void uintinf_t::long_square(const uint64_t* x, const std::size_t x_len, uint64_t* dest)
+{
+    if (x_len == 1 && x[0] == 0) return;
+    
+    uint64_t carry = 0;
+    for (std::size_t j = 0; j < x_len; j++)
+    {
+        carry = 0;
+        for (std::size_t i = 0; i < x_len; i++)
+        {
+            __uint128_t overflow = __uint128_t(dest[i+j]) + __uint128_t(x[i]) * __uint128_t(x[j]) + __uint128_t(carry);
+            
+            dest[i+j] = (overflow &  uintinf_t::max_digit);
+            carry     = (overflow >> uintinf_t::log2_base);
+        }
+        dest[x_len+j] = carry;
+    }
 }
 
 std::vector<uint64_t> uintinf_t::long_square(const std::vector<uint64_t>& x)
