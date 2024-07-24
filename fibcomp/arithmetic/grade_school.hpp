@@ -1,8 +1,7 @@
 #ifndef grade_school_hpp
 #define grade_school_hpp
 
-#include <stdint.h>
-#include <vector>
+#include "bshift.hpp"
 
 namespace gschool
 {

@@ -7,12 +7,9 @@
 #include <algorithm>
 #include <iostream>
 
-#include "grade_school.hpp"
+#include "karatsuba.hpp"
 
 #define MULT_KARATSUBA
-#define MULT_KARATSUBA_CUTOFF 50
-#define MULT_MEM_OPT
-#define SQUARE_MEM_OPT
 
 class uintinf_t
 {
@@ -52,38 +49,6 @@ public:
             
 private:
     std::vector<uint64_t> m_digits;
-    
-private:
-    // Assume destination is big enough to store overflow
-    // Assume pure destination is filled with zeros
-    static void relative_long_add(      uint64_t* x, const std::size_t x_len,
-                                  const uint64_t* y, const std::size_t y_len);
-    static void relative_long_sub(      uint64_t* x, const std::size_t x_len,
-                                  const uint64_t* y, const std::size_t y_len);
-    
-    static void long_add(const  uint64_t* x, const std::size_t x_len,
-                         const  uint64_t* y, const std::size_t y_len,
-                         uint64_t* dest);
-    
-    static void long_mult(const uint64_t* x, const std::size_t x_len,
-                          const uint64_t* y, const std::size_t y_len,
-                          uint64_t* dest);
-    static void kara_mult(const uint64_t* x, const std::size_t x_len,
-                          const uint64_t* y, const std::size_t y_len,
-                          uint64_t* dest);
-    static void long_square(const uint64_t* x, const std::size_t x_len,
-                            uint64_t* dest);
-    static void kara_square(const uint64_t* x, const std::size_t x_len,
-                            uint64_t* dest);
-
-    
-    static void relative_quadrupling(std::vector<uint64_t>&);
-    static void relative_doubling(std::vector<uint64_t>&);
-    static void relative_halving(std::vector<uint64_t>&);
-    static void relative_fourthing(std::vector<uint64_t>&);
-
-    static std::vector<uint64_t> kara_mult  (const std::vector<uint64_t>&, const std::vector<uint64_t>&);
-    static std::vector<uint64_t> kara_square(const std::vector<uint64_t>&);
 };
 
 

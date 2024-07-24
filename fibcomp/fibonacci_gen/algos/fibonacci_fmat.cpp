@@ -9,7 +9,12 @@ FibonacciFmat::FibonacciFmat()
 uintinf_t FibonacciFmat::run(uint64_t n)
 {
     if      (n <= 93) return run_small(n);
-    else if (n%2)    return square(run((n+1)/2)) + square(run((n-1)/2));
+    else if (n%2)    
+    {
+        uintinf_t F1 = run((n+1)/2);
+        uintinf_t F2 = run((n-1)/2);
+        return square(F1) + square(F2);
+    }
     else
     {
         uintinf_t Fn = run(n/2);
