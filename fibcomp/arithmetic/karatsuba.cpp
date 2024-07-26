@@ -108,16 +108,27 @@ void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
         if (x_plus_len > 0 && x_plus[x_plus_len-1] == 0) x_plus_len--;
         if (y_plus_len > 0 && y_plus[y_plus_len-1] == 0) y_plus_len--;
         
-        std::size_t z_mi_len = x_plus_len + y_plus_len + 1; // +1 for the overflow digit in the next relative add
+        std::size_t z_mi_len = x_plus_len + y_plus_len;
         std::vector<uint64_t> z_mi(z_mi_len, 0);
         mult(x_plus.data(), x_plus_len, y_plus.data(), y_plus_len, z_mi.data(), z_mi_len); // (x_lo + x_hi) * (y_lo + y_hi)
         
         gschool::sub_r(z_mi.data(), z_mi_len, z_lo, 2*split);               // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
         gschool::sub_r(z_mi.data(), z_mi_len, z_hi, dest_len - (2*split));  // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
                 
-                              gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
-        if (z_mi_len > split) gschool::add_r(z_hi,        dest_len - (2*split), z_mi.data() + split, z_mi_len - split);
         
+        /*
+           |....B^(3*split)|....B^(2*split)|........B^split|............B^0|
+           |...........................z_hi|...........................z_lo|
+           |...............|...........................z_mi|...............|
+         */
+        
+        // |...............|...................z_mi+z_lo_hi|...............|
+            gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
+        // |...................z_hi+z_mi'_hi|...........................z_lo|
+        if (z_mi_len > split) 
+            gschool::add_r(z_hi,        dest_len - (2*split), z_mi.data() + split, z_mi_len - split);
+        
+        // z_hi*B^(2*split) + z_mi*B^split + z_lo
         std::copy(z_mi.data(), z_mi.data() + split, dest + split);
     }
 }
@@ -147,30 +158,35 @@ void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *des
     else if (x_len <= MULT_KARATSUBA_CUTOFF) gschool::square(x, x_len, dest);
     else
     {
-        std::size_t x_lim = x_len >> 1;
+        std::size_t split = x_len >> 1;
+        std::size_t x_lo_len = std::min(split, x_len);
+        std::size_t x_hi_len = x_len - x_lo_len;
         
         uint64_t* z_lo = dest;
-        uint64_t* z_hi = dest + (2*x_lim);
+        uint64_t* z_hi = dest + (2*split);
         
-        std::size_t z_lo_len = 2*x_lim;
-        std::size_t z_hi_len = 2*(x_len - x_lim);
-        
-        square(x,        x_lim,       z_lo, dest_len); // z_lo = x_lo * x_lo
-        square(x+x_lim,  x_len-x_lim, z_hi, dest_len - (2*x_lim)); // z_hi = x_hi * x_hi
-        
-        z_lo_len -= (z_lo[z_lo_len-1] == 0);
-        z_hi_len -= (z_hi[z_hi_len-1] == 0);
-        
-        std::vector<uint64_t> z_mi(x_len, 0);
-        mult(x, x_lim, x+x_lim, x_len-x_lim, z_mi.data(), z_mi.size()); // x_lo * x_hi
-        if (z_mi.back() == 0 && z_mi.size() > 1) z_mi.resize(z_mi.size()-1);
-        bshift::times2_r(z_mi); // z_mi = 2 * x_lo * x_hi
+        square(x,          x_lo_len, z_lo, dest_len);             // z_lo = x_lo ^ 2
+        square(x+x_lo_len, x_hi_len, z_hi, dest_len - (2*split)); // z_hi = x_hi ^ 2
+                
+        std::vector<uint64_t> z_mi(x_lo_len + x_hi_len + 1, 0);             // +1 for the carry digit in the next bitshift
+        mult(x, x_lo_len, x+x_lo_len, x_hi_len, z_mi.data(), z_mi.size());  // z_mi =     x_lo * x_hi
+        bshift::times2_r(z_mi);                                             // z_mi = 2 * x_lo * x_hi
         std::size_t z_mi_len = z_mi.size();
         
-                              gschool::add_r(z_mi.data(), z_mi_len, dest        + x_lim, x_lim);
-        if (z_mi_len > x_lim) gschool::add_r(z_hi,        z_hi_len, z_mi.data() + x_lim, z_mi_len - x_lim);
+        /*
+           |....B^(3*split)|....B^(2*split)|........B^split|............B^0|
+           |...........................z_hi|...........................z_lo|
+           |...............|...........................z_mi|...............|
+         */
         
-        std::copy(z_mi.data(), z_mi.data() + std::min(x_lim, z_mi_len), dest + x_lim);
+        // |...............|...................z_mi+z_lo_hi|...............|
+            gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
+        // |...................z_hi+z_mi'_hi|...........................z_lo|
+        if (z_mi_len > split)
+            gschool::add_r(z_hi,        dest_len - (2*split), z_mi.data() + split, z_mi_len - split);
+        
+        // z_hi*B^(2*split) + z_mi*B^split + z_lo
+        std::copy(z_mi.data(), z_mi.data() + split, dest + split);
     }
 }
 

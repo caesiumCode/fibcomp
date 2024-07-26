@@ -55,24 +55,25 @@ void disp_search(Fibonacci& algo, double time_limit)
 int main(int argc, const char * argv[]) 
 {
     
-    //double time_limit = 1;
+    double time_limit = 1;
     
     std::vector<std::shared_ptr<Fibonacci>> algos;
     
-    //algos.push_back(std::make_shared<FibonacciRec>());
+    algos.push_back(std::make_shared<FibonacciRec>());
     //algos.push_back(std::make_shared<FibonacciRecMem>());
-    //algos.push_back(std::make_shared<FibonacciLin>());
+    algos.push_back(std::make_shared<FibonacciLin>());
     algos.push_back(std::make_shared<FibonacciMatRec>());
-    algos.push_back(std::make_shared<FibonacciMatLoop>());
-    algos.push_back(std::make_shared<FibonacciFmat>());
-    algos.push_back(std::make_shared<FibonacciFmatMem>());
+    //algos.push_back(std::make_shared<FibonacciMatLoop>());
+    //algos.push_back(std::make_shared<FibonacciFmat>());
+    //algos.push_back(std::make_shared<FibonacciFmatMem>());
     algos.push_back(std::make_shared<FibonacciFmatTriangle>());
     algos.push_back(std::make_shared<FibonacciBinet>());
     
     std::cout << std::setw(20) << "ALGORITHME" << " |" << std::setw(10) << "MAX N" << std::endl;
     std::cout << std::string(32, '-') << std::endl;
-    //for (std::shared_ptr<Fibonacci> algo : algos) disp_search(*algo.get(), time_limit);
+    for (std::shared_ptr<Fibonacci> algo : algos) disp_search(*algo.get(), time_limit);
     
+    /*
     uint64_t n = 100000;
     FibonacciLin algo;
     uintinf_t ref = algo.run(n);
@@ -81,6 +82,7 @@ int main(int argc, const char * argv[])
         bool good = algo->run(n).is_equal(ref);
         std::cout << std::setw(20) << algo->name << std::setw(12) << (good ? "GOOD" : "BAD") << std::endl;
     }
+     */
     
     //std::cout << res_1.to_string() << std::endl;
     //std::cout << res_2.to_string() << std::endl;

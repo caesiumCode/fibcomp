@@ -5,7 +5,7 @@
 
 #include "grade_school.hpp"
 
-#define MULT_KARATSUBA_CUTOFF 2
+#define MULT_KARATSUBA_CUTOFF 70
 
 namespace karatsuba_old
 {
