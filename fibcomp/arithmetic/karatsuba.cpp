@@ -115,7 +115,6 @@ void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
         gschool::sub_r(z_mi.data(), z_mi_len, z_lo, 2*split);               // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
         gschool::sub_r(z_mi.data(), z_mi_len, z_hi, dest_len - (2*split));  // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
                 
-        
         /*
            |....B^(3*split)|....B^(2*split)|........B^split|............B^0|
            |...........................z_hi|...........................z_lo|
@@ -125,8 +124,10 @@ void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
         // |...............|...................z_mi+z_lo_hi|...............|
             gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
         // |...................z_hi+z_mi'_hi|...........................z_lo|
-        if (z_mi_len > split) 
-            gschool::add_r(z_hi,        dest_len - (2*split), z_mi.data() + split, z_mi_len - split);
+        if (z_mi_len > split) {
+            std::size_t z_hi_len = dest_len - (2*split);
+            gschool::add_r(z_hi, z_hi_len, z_mi.data() + split, std::min(z_mi_len - split, z_hi_len));
+        }
         
         // z_hi*B^(2*split) + z_mi*B^split + z_lo
         std::copy(z_mi.data(), z_mi.data() + split, dest + split);
@@ -168,11 +169,11 @@ void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *des
         square(x,          x_lo_len, z_lo, dest_len);             // z_lo = x_lo ^ 2
         square(x+x_lo_len, x_hi_len, z_hi, dest_len - (2*split)); // z_hi = x_hi ^ 2
                 
-        std::vector<uint64_t> z_mi(x_lo_len + x_hi_len + 1, 0);             // +1 for the carry digit in the next bitshift
+        std::vector<uint64_t> z_mi(x_lo_len + x_hi_len + 1, 0);             // +1 for the potential carry digit in the next bitshift
         mult(x, x_lo_len, x+x_lo_len, x_hi_len, z_mi.data(), z_mi.size());  // z_mi =     x_lo * x_hi
         bshift::times2_r(z_mi);                                             // z_mi = 2 * x_lo * x_hi
         std::size_t z_mi_len = z_mi.size();
-        
+                
         /*
            |....B^(3*split)|....B^(2*split)|........B^split|............B^0|
            |...........................z_hi|...........................z_lo|
@@ -182,8 +183,10 @@ void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *des
         // |...............|...................z_mi+z_lo_hi|...............|
             gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
         // |...................z_hi+z_mi'_hi|...........................z_lo|
-        if (z_mi_len > split)
-            gschool::add_r(z_hi,        dest_len - (2*split), z_mi.data() + split, z_mi_len - split);
+        if (z_mi_len > split) {
+            std::size_t z_hi_len = dest_len - (2*split);
+            gschool::add_r(z_hi, z_hi_len, z_mi.data() + split, std::min(z_mi_len - split, z_hi_len));
+        }
         
         // z_hi*B^(2*split) + z_mi*B^split + z_lo
         std::copy(z_mi.data(), z_mi.data() + split, dest + split);

@@ -73,13 +73,12 @@ double  running_time_high_precision(Fibonacci&, uint64_t, uint64_t = 10);
 
 int main(int argc, const char * argv[]) 
 {
-    //find_thresholds();
+    find_thresholds();
     
     //compare_to_ref();
     
-    FibonacciFmatTriangle algo;
-    std::cout << running_time_high_precision(algo, 15000000, 100) << "s" << std::endl;;
-    
+    //FibonacciFmatTriangle algo;
+    //std::cout << running_time_high_precision(algo, 15000000, 100) << "s" << std::endl;;
     
     return EXIT_SUCCESS;
 }
