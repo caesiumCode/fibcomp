@@ -151,7 +151,7 @@ std::vector<uint64_t> gschool::square(const std::vector<uint64_t>& x)
 /** WARNING **/
 /** Assumes destination has enough space (even for overflow digit) and is filled with zeroes in the case of a pure destination  **/
 
-
+// Assumes x_len > y_len
 void gschool::add_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len)
 {
     std::size_t i = 0;
@@ -164,7 +164,7 @@ void gschool::add_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, con
         carry = (carry ? x[i] <= y[i] : x[i] < y[i]);
     }
     
-    for (; i < x_len; i++)
+    for (; i < x_len && carry; i++)
     {
         x[i] += carry;
         
@@ -172,6 +172,7 @@ void gschool::add_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, con
     }    
 }
 
+// Assumes x >= y
 void gschool::sub_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len)
 {
     std::size_t i = 0;
@@ -183,7 +184,7 @@ void gschool::sub_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, con
         x[i] -= minus;
     }
     
-    for (; i < x_len; i++)
+    for (; i < x_len && borrow; i++)
     {
         x[i] -= borrow;
                 
@@ -213,7 +214,7 @@ void gschool::add(const uint64_t* x, const std::size_t x_len, const uint64_t* y,
             carry = (dest[i] < carry);
         }
         
-        dest[i] += carry;
+        dest[i] = carry;
     }
 }
 

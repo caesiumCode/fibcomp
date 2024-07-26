@@ -66,7 +66,8 @@ uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
 #if defined(MULT_KARATSUBA)
 uintinf_t square(const uintinf_t& x)
 {
-    return karatsuba::square(x.m_digits);
+    return karatsuba::mult(x.m_digits, x.m_digits);
+    //return karatsuba::square(x.m_digits);
 }
 #else
 uintinf_t square(const uintinf_t& x)

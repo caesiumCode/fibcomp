@@ -75,7 +75,9 @@ std::vector<uint64_t> karatsuba_old::square(const std::vector<uint64_t>& x)
 }
 
 
-void karatsuba::mult(const uint64_t *x, const std::size_t x_len, const uint64_t *y, const std::size_t y_len, uint64_t *dest)
+void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
+                     const uint64_t *y, const std::size_t y_len,
+                     uint64_t *dest, const std::size_t dest_len)
 {
     if      (x_len == 0 || y_len == 0 || (x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return;
     else if (x_len == 1) gschool::mult_s(x[0], y, y_len, dest);
@@ -84,45 +86,39 @@ void karatsuba::mult(const uint64_t *x, const std::size_t x_len, const uint64_t 
     else
     {
         std::size_t split = std::max(x_len, y_len) >> 1;
-        std::size_t x_lim = std::min(split, x_len);
-        std::size_t y_lim = std::min(split, y_len);
+        std::size_t x_lo_len = std::min(split, x_len);
+        std::size_t y_lo_len = std::min(split, y_len);
+        std::size_t x_hi_len = x_len - x_lo_len;
+        std::size_t y_hi_len = y_len - y_lo_len;
         
         uint64_t* z_lo = dest;
         uint64_t* z_hi = dest + (2*split);
         
-        std::size_t z_lo_len = x_lim + y_lim;
-        std::size_t z_hi_len = (x_len == x_lim || y_len == y_lim) ? 1 : x_len - x_lim + y_len - y_lim;
+        mult(x,          x_lo_len, y,          y_lo_len, z_lo, dest_len);             // z_lo = x_lo * y_lo
+        mult(x+x_lo_len, x_hi_len, y+y_lo_len, y_hi_len, z_hi, dest_len - (2*split)); // z_hi = x_hi * y_hi
         
-        mult(x,        x_lim,          y,          y_lim,       z_lo); // z_lo = x_lo * y_lo
-        mult(x+x_lim,  x_len-x_lim,    y+y_lim,    y_len-y_lim, z_hi); // z_hi = x_hi * y_hi
+        std::size_t x_plus_len = std::max(x_lo_len, x_hi_len) + 1;
+        std::size_t y_plus_len = std::max(y_lo_len, y_hi_len) + 1;
+        std::vector<uint64_t> x_plus(x_plus_len, 0);
+        std::vector<uint64_t> y_plus(y_plus_len, 0);
         
-        while (z_lo_len > 1 && z_lo[z_lo_len-1] == 0) z_lo_len--;
-        while (z_hi_len > 1 && z_lo[z_hi_len-1] == 0) z_hi_len--;
+        gschool::add(x, x_lo_len, x+x_lo_len, x_hi_len, x_plus.data()); // x_lo + x_hi
+        gschool::add(y, y_lo_len, y+y_lo_len, y_hi_len, y_plus.data()); // y_lo + y_hi
         
-        std::vector<uint64_t> x_plus(std::max(x_lim, x_len-x_lim) + 1, 0);
-        std::vector<uint64_t> y_plus(std::max(y_lim, y_len-y_lim) + 1, 0);
+        if (x_plus_len > 0 && x_plus[x_plus_len-1] == 0) x_plus_len--;
+        if (y_plus_len > 0 && y_plus[y_plus_len-1] == 0) y_plus_len--;
         
-        gschool::add(x, x_lim, x+x_lim, x_len-x_lim, x_plus.data()); // x_lo + x_hi
-        gschool::add(y, y_lim, y+y_lim, y_len-y_lim, y_plus.data()); // y_lo + y_hi
+        std::size_t z_mi_len = x_plus_len + y_plus_len + 1; // +1 for the overflow digit in the next relative add
+        std::vector<uint64_t> z_mi(z_mi_len, 0);
+        mult(x_plus.data(), x_plus_len, y_plus.data(), y_plus_len, z_mi.data(), z_mi_len); // (x_lo + x_hi) * (y_lo + y_hi)
         
-        if (x_plus.back() == 0) x_plus.resize(x_plus.size()-1);
-        if (y_plus.back() == 0) y_plus.resize(y_plus.size()-1);
-        
-        std::vector<uint64_t> z_mi(x_plus.size() + y_plus.size(), 0);
-        mult(x_plus.data(), x_plus.size(), y_plus.data(), y_plus.size(), z_mi.data()); // (x_lo + x_hi) * (y_lo + y_hi)
-        
-        gschool::sub_r(z_mi.data(), z_mi.size(), z_lo, z_lo_len); // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
-        gschool::sub_r(z_mi.data(), z_mi.size(), z_hi, z_hi_len); // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
-        std::size_t z_mi_len = z_mi.size();
-        
-                              gschool::add_r(z_mi.data(), z_mi_len, dest        + split, split);
-        if (z_mi_len > split) gschool::add_r(z_hi,        z_hi_len, z_mi.data() + split, z_mi_len - split);
-        
-        
-        //while (z_mi[z_mi_len-1] == 0 && z_mi_len > 1) z_mi_len--;
-        //z_mi.resize(z_mi_len);
+        gschool::sub_r(z_mi.data(), z_mi_len, z_lo, 2*split);               // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
+        gschool::sub_r(z_mi.data(), z_mi_len, z_hi, dest_len - (2*split));  // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
                 
-        std::copy(z_mi.data(), z_mi.data() + std::min(split, z_mi_len), dest + split);
+                              gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
+        if (z_mi_len > split) gschool::add_r(z_hi,        dest_len - (2*split), z_mi.data() + split, z_mi_len - split);
+        
+        std::copy(z_mi.data(), z_mi.data() + split, dest + split);
     }
 }
 
@@ -136,17 +132,16 @@ std::vector<uint64_t> karatsuba::mult(const std::vector<uint64_t>& x, const std:
     if (y_len == 1) return gschool::mult_s(y[0], x);
     if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) return gschool::mult(x, y);
     
-    
     std::vector<uint64_t> z(x.size() + y.size(), 0);
     
-    mult(x.data(), x.size(), y.data(), y.size(), z.data());
+    mult(x.data(), x.size(), y.data(), y.size(), z.data(), z.size());
     
     if (z.back() == 0) z.resize(z.size()-1);
     
     return z;
 }
 
-void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *dest)
+void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *dest, const std::size_t dest_len)
 {
     if      (x_len == 0 || (x_len == 1 && x[0] == 0)) return;
     else if (x_len <= MULT_KARATSUBA_CUTOFF) gschool::square(x, x_len, dest);
@@ -160,14 +155,14 @@ void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *des
         std::size_t z_lo_len = 2*x_lim;
         std::size_t z_hi_len = 2*(x_len - x_lim);
         
-        square(x,        x_lim,       z_lo); // z_lo = x_lo * x_lo
-        square(x+x_lim,  x_len-x_lim, z_hi); // z_hi = x_hi * x_hi
+        square(x,        x_lim,       z_lo, dest_len); // z_lo = x_lo * x_lo
+        square(x+x_lim,  x_len-x_lim, z_hi, dest_len - (2*x_lim)); // z_hi = x_hi * x_hi
         
         z_lo_len -= (z_lo[z_lo_len-1] == 0);
         z_hi_len -= (z_hi[z_hi_len-1] == 0);
         
         std::vector<uint64_t> z_mi(x_len, 0);
-        mult(x, x_lim, x+x_lim, x_len-x_lim, z_mi.data()); // x_lo * x_hi
+        mult(x, x_lim, x+x_lim, x_len-x_lim, z_mi.data(), z_mi.size()); // x_lo * x_hi
         if (z_mi.back() == 0 && z_mi.size() > 1) z_mi.resize(z_mi.size()-1);
         bshift::times2_r(z_mi); // z_mi = 2 * x_lo * x_hi
         std::size_t z_mi_len = z_mi.size();
@@ -189,7 +184,7 @@ std::vector<uint64_t> karatsuba::square(const std::vector<uint64_t>& x)
     
     std::vector<uint64_t> z(2*x.size(), 0);
     
-    square(x.data(), x.size(), z.data());
+    square(x.data(), x.size(), z.data(), z.size());
     
     if (z.back() == 0) z.resize(z.size()-1);
     
