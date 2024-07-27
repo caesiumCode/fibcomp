@@ -127,24 +127,46 @@ std::vector<uint64_t> gschool::square(const std::vector<uint64_t>& x)
     
     if (x_len == 0 || (x_len == 1 && x[0] == 0)) return {0};
     
-    std::vector<uint64_t> z(2 * x_len, 0);
+    std::size_t z_len = 2*x_len;
+    std::vector<uint64_t> z(z_len, 0);
     
-    uint64_t carry = 0;
-    for (std::size_t j = 0; j < x_len; j++)
+    // z = sum_{j < i} x_i x_j B^{i+j}
+    __uint128_t carry = 0;
+    for (std::size_t i = 0; i < x_len; i++)
     {
         carry = 0;
-        for (std::size_t i = 0; i < x_len; i++)
+        for (std::size_t j = 0; j < i; j++)
         {
-            __uint128_t overflow = __uint128_t(z[i+j]) + __uint128_t(x[i]) * __uint128_t(x[j]) + __uint128_t(carry);
+            __uint128_t overflow = __uint128_t(z[i+j]) + __uint128_t(x[i]) * __uint128_t(x[j]) + carry;
             
             z[i+j] = (overflow &  UINT64_MAX);
             carry  = (overflow >> 64);
         }
-        z[x_len+j] += carry;
+        z[2*i] = carry;
     }
     
-    if (carry == 0) z.resize(2 * x_len - 1);
+    // z = 2 sum_{j < i} x_i x_j B^{i+j}
+    for (std::size_t i = z_len-1; i > 0; i--)
+    {
+        z[i] <<= 1;
+        z[i] |= (z[i-1] >> 63);
+    }
+    z[0] <<= 1;
     
+    // z = sum_{i} x_i ^ 2 B^{2i} + 2 sum_{j < i} x_i x_j B^{i+j} = (sum_{i} x_i B^i)^2
+    carry = 0;
+    for (std::size_t i = 0; i < x_len ; i++)
+    {
+        __uint128_t overflow = __uint128_t(z[2*i]) + __uint128_t(x[i]) * __uint128_t(x[i]) + carry;
+        z[2*i] = (overflow &  UINT64_MAX);
+        carry  = (overflow >> 64);
+        
+        overflow = __uint128_t(z[2*i+1]) + carry;
+        z[2*i+1] = (overflow &  UINT64_MAX);
+        carry    = (overflow >> 64);
+    }
+    
+    if (z.back() == 0) z.pop_back();
     return z;
 }
 

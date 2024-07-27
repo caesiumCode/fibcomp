@@ -73,12 +73,12 @@ double  running_time_high_precision(Fibonacci&, uint64_t, uint64_t = 10);
 
 int main(int argc, const char * argv[]) 
 {
-    find_thresholds();
+    //find_thresholds(0.1);
     
-    //compare_to_ref();
+    compare_to_ref();
     
     //FibonacciFmatTriangle algo;
-    //std::cout << running_time_high_precision(algo, 15000000, 100) << "s" << std::endl;;
+    //std::cout << running_time_high_precision(algo, 4000000, 100) << "s" << std::endl;
     
     return EXIT_SUCCESS;
 }
@@ -102,6 +102,8 @@ void compare_to_ref()
     }
     std::cout << std::endl;
     
+    bool ONE_ERROR = false;
+    
     for (int i = 0; i < 100; i++)
     {
         uint64_t n = rand() % 300000;
@@ -113,10 +115,14 @@ void compare_to_ref()
         {
             bool good = algo->run(n).is_equal(ref);
             std::cout << std::setw(21) << (good ? "GOOD" : "X");
+            
+            ONE_ERROR = good ? ONE_ERROR : true;
         }
         
         std::cout << std::endl;
     }
+    
+    std::cout << (ONE_ERROR ? "ONE ERROR" : "ALL GOOD") << std::endl;
 }
 
 double running_time_high_precision(Fibonacci& algo, uint64_t n, uint64_t N)

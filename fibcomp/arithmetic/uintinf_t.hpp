@@ -9,7 +9,7 @@
 
 #include "karatsuba.hpp"
 
-#define MULT_KARATSUBA
+//#define MULT_KARATSUBA
 
 class uintinf_t
 {
