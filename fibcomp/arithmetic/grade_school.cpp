@@ -257,20 +257,40 @@ void gschool::mult_s(const uint64_t scalar, const uint64_t* x, const std::size_t
 
 void gschool::square(const uint64_t* x, const std::size_t x_len, uint64_t* dest)
 {
-    if (x_len == 1 && x[0] == 0) return;
-    
-    uint64_t carry = 0;
-    for (std::size_t j = 0; j < x_len; j++)
+    // z = sum_{j < i} x_i x_j B^{i+j}
+    __uint128_t carry = 0;
+    for (std::size_t i = 0; i < x_len; i++)
     {
         carry = 0;
-        for (std::size_t i = 0; i < x_len; i++)
+        for (std::size_t j = 0; j < i; j++)
         {
-            __uint128_t overflow = __uint128_t(dest[i+j]) + __uint128_t(x[i]) * __uint128_t(x[j]) + __uint128_t(carry);
+            __uint128_t overflow = __uint128_t(dest[i+j]) + __uint128_t(x[i]) * __uint128_t(x[j]) + carry;
             
             dest[i+j] = (overflow &  UINT64_MAX);
             carry     = (overflow >> 64);
         }
-        dest[x_len+j] = carry;
+        dest[2*i] = carry;
+    }
+    
+    // z = 2 sum_{j < i} x_i x_j B^{i+j}
+    for (std::size_t i = 2*x_len-1; i > 0; i--)
+    {
+        dest[i] <<= 1;
+        dest[i] |= (dest[i-1] >> 63);
+    }
+    dest[0] <<= 1;
+    
+    // z = sum_{i} x_i ^ 2 B^{2i} + 2 sum_{j < i} x_i x_j B^{i+j} = (sum_{i} x_i B^i)^2
+    carry = 0;
+    for (std::size_t i = 0; i < x_len ; i++)
+    {
+        __uint128_t overflow = __uint128_t(dest[2*i]) + __uint128_t(x[i]) * __uint128_t(x[i]) + carry;
+        dest[2*i] = (overflow &  UINT64_MAX);
+        carry     = (overflow >> 64);
+        
+        overflow    = __uint128_t(dest[2*i+1]) + carry;
+        dest[2*i+1] = (overflow &  UINT64_MAX);
+        carry       = (overflow >> 64);
     }
 }
 
