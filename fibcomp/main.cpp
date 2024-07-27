@@ -33,7 +33,7 @@ uint64_t search_threshold(Fibonacci& algo, double time_limit, bool slow = false)
         high = (slow ? high+2 : high << 1);
     }
         
-    while (high - low > 1)
+    while (high - low > 1 + low/10000ULL)
     {
         uint64_t mid = (high + low) / 2;
         double t = running_time(algo, mid);
@@ -73,12 +73,12 @@ double  running_time_high_precision(Fibonacci&, uint64_t, uint64_t = 10);
 
 int main(int argc, const char * argv[]) 
 {
-    //find_thresholds(0.1);
+    //find_thresholds(1);
     
     compare_to_ref();
     
     //FibonacciFmatTriangle algo;
-    //std::cout << running_time_high_precision(algo, 4000000, 100) << "s" << std::endl;
+    //std::cout << running_time_high_precision(algo, 20000000, 1) << "s" << std::endl;
     
     return EXIT_SUCCESS;
 }
@@ -127,8 +127,11 @@ void compare_to_ref()
 
 double running_time_high_precision(Fibonacci& algo, uint64_t n, uint64_t N)
 {
-    double T = 0;
-    for (std::size_t i = 0; i < N; i++) T += running_time(algo, n);
+    std::vector<double> data;
     
-    return T / double(N);
+    for (std::size_t i = 0; i < N; i++) data.push_back(running_time(algo, n));
+    
+    std::sort(data.begin(), data.end());
+    
+    return data[N/2];
 }

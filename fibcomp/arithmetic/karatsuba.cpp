@@ -77,43 +77,43 @@ std::vector<uint64_t> karatsuba_old::square(const std::vector<uint64_t>& x)
 
 void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
                      const uint64_t *y, const std::size_t y_len,
-                     uint64_t *dest, const std::size_t dest_len)
+                     uint64_t *dest)
 {
     if      (x_len == 0 || y_len == 0 || (x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return;
     else if (x_len == 1) gschool::mult_s(x[0], y, y_len, dest);
     else if (y_len == 1) gschool::mult_s(y[0], x, x_len, dest);
     else if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) gschool::mult(x, x_len, y, y_len, dest);
+    else if (x_len >= 2*y_len || y_len >= 2*x_len)
+    {
+        std::cout << "hello" << std::endl;
+        gschool::mult(x, x_len, y, y_len, dest);
+    }
     else
     {
-        std::size_t split = std::max(x_len, y_len) >> 1;
-        std::size_t x_lo_len = std::min(split, x_len);
-        std::size_t y_lo_len = std::min(split, y_len);
-        std::size_t x_hi_len = x_len - x_lo_len;
-        std::size_t y_hi_len = y_len - y_lo_len;
+        std::size_t z_len = x_len + y_len;
+        std::size_t split = (std::max(x_len, y_len) + 1) >> 1;
+        std::size_t x_hi_len = x_len - split;
+        std::size_t y_hi_len = y_len - split;
         
         uint64_t* z_lo = dest;
         uint64_t* z_hi = dest + (2*split);
         
-        mult(x,          x_lo_len, y,          y_lo_len, z_lo, dest_len);             // z_lo = x_lo * y_lo
-        mult(x+x_lo_len, x_hi_len, y+y_lo_len, y_hi_len, z_hi, dest_len - (2*split)); // z_hi = x_hi * y_hi
+        mult(x,         split,      y,          split,      z_lo); // z_lo = x_lo * y_lo
+        mult(x+split,   x_hi_len,   y+split,    y_hi_len,   z_hi); // z_hi = x_hi * y_hi
         
-        std::size_t x_plus_len = std::max(x_lo_len, x_hi_len) + 1;
-        std::size_t y_plus_len = std::max(y_lo_len, y_hi_len) + 1;
-        std::vector<uint64_t> x_plus(x_plus_len, 0);
-        std::vector<uint64_t> y_plus(y_plus_len, 0);
+        std::size_t plus_len = split + 1;
+        std::vector<uint64_t> x_plus(plus_len, 0);
+        std::vector<uint64_t> y_plus(plus_len, 0);
         
-        gschool::add(x, x_lo_len, x+x_lo_len, x_hi_len, x_plus.data()); // x_lo + x_hi
-        gschool::add(y, y_lo_len, y+y_lo_len, y_hi_len, y_plus.data()); // y_lo + y_hi
+        gschool::add(x, split, x+split, x_hi_len, x_plus.data()); // x_lo + x_hi
+        gschool::add(y, split, y+split, y_hi_len, y_plus.data()); // y_lo + y_hi
         
-        if (x_plus_len > 0 && x_plus[x_plus_len-1] == 0) x_plus_len--;
-        if (y_plus_len > 0 && y_plus[y_plus_len-1] == 0) y_plus_len--;
-        
-        std::size_t z_mi_len = x_plus_len + y_plus_len;
+        std::size_t z_mi_len = 2*split + 2;
         std::vector<uint64_t> z_mi(z_mi_len, 0);
-        mult(x_plus.data(), x_plus_len, y_plus.data(), y_plus_len, z_mi.data(), z_mi_len); // (x_lo + x_hi) * (y_lo + y_hi)
+        mult(x_plus.data(), plus_len, y_plus.data(), plus_len, z_mi.data()); // (x_lo + x_hi) * (y_lo + y_hi)
         
-        gschool::sub_r(z_mi.data(), z_mi_len, z_lo, 2*split);               // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
-        gschool::sub_r(z_mi.data(), z_mi_len, z_hi, dest_len - (2*split));  // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
+        gschool::sub_r(z_mi.data(), z_mi_len, z_lo, 2*split);            // (x_lo + x_hi) * (y_lo + y_hi) - z_lo
+        gschool::sub_r(z_mi.data(), z_mi_len, z_hi, z_len - (2*split));  // (x_lo + x_hi) * (y_lo + y_hi) - z_lo - z_hi
                 
         /*
            |....B^(3*split)|....B^(2*split)|........B^split|............B^0|
@@ -121,16 +121,7 @@ void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
            |...............|...........................z_mi|...............|
          */
         
-        // |...............|...................z_mi+z_lo_hi|...............|
-            gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
-        // |...................z_hi+z_mi'_hi|...........................z_lo|
-        if (z_mi_len > split) {
-            std::size_t z_hi_len = dest_len - (2*split);
-            gschool::add_r(z_hi, z_hi_len, z_mi.data() + split, std::min(z_mi_len - split, z_hi_len));
-        }
-        
-        // z_hi*B^(2*split) + z_mi*B^split + z_lo
-        std::copy(z_mi.data(), z_mi.data() + split, dest + split);
+        gschool::add_r(dest + split, z_len - split, z_mi.data(), z_mi_len);
     }
 }
 
@@ -144,35 +135,42 @@ std::vector<uint64_t> karatsuba::mult(const std::vector<uint64_t>& x, const std:
     if (y_len == 1) return gschool::mult_s(y[0], x);
     if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) return gschool::mult(x, y);
     
-    std::vector<uint64_t> z(x.size() + y.size(), 0);
+    std::vector<uint64_t> z(x_len + y_len, 0);
     
-    mult(x.data(), x.size(), y.data(), y.size(), z.data(), z.size());
+    mult(x.data(), x.size(), y.data(), y.size(), z.data());
     
-    if (z.back() == 0) z.resize(z.size()-1);
+    while (z.size() > 1 && z.back() == 0) z.pop_back();
     
     return z;
 }
 
-void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *dest, const std::size_t dest_len)
+void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *dest)
 {
-    if      (x_len == 0 || (x_len == 1 && x[0] == 0)) return;
+    if      (x_len == 0) return;
     else if (x_len <= MULT_KARATSUBA_CUTOFF) gschool::square(x, x_len, dest);
     else
     {
-        std::size_t split = x_len >> 1;
-        std::size_t x_lo_len = std::min(split, x_len);
-        std::size_t x_hi_len = x_len - x_lo_len;
+        std::size_t z_len = 2*x_len;
+        std::size_t split = (x_len + 1) >> 1;
+        std::size_t x_hi_len = x_len - split;
         
         uint64_t* z_lo = dest;
         uint64_t* z_hi = dest + (2*split);
         
-        square(x,          x_lo_len, z_lo, dest_len);             // z_lo = x_lo ^ 2
-        square(x+x_lo_len, x_hi_len, z_hi, dest_len - (2*split)); // z_hi = x_hi ^ 2
-                
-        std::vector<uint64_t> z_mi(x_lo_len + x_hi_len + 1, 0);             // +1 for the potential carry digit in the next bitshift
-        mult(x, x_lo_len, x+x_lo_len, x_hi_len, z_mi.data(), z_mi.size());  // z_mi =     x_lo * x_hi
-        bshift::times2_r(z_mi);                                             // z_mi = 2 * x_lo * x_hi
-        std::size_t z_mi_len = z_mi.size();
+        square(x,       split,      z_lo); // z_lo = x_lo ^ 2
+        square(x+split, x_hi_len,   z_hi); // z_hi = x_hi ^ 2
+        
+        std::size_t z_mi_len = x_len + 1;               // +1 for the potential carry digit in the next bitshift
+        std::vector<uint64_t> z_mi(z_mi_len, 0);
+        mult(x, split, x+split, x_hi_len, z_mi.data()); // z_mi = x_lo * x_hi
+        
+        // z_mi = 2 * x_lo * x_hi
+        for (std::size_t i = z_mi_len-1; i > 0; i--)
+        {
+            z_mi[i] <<= 1;
+            z_mi[i] |= (z_mi[i-1] >> 63);
+        }
+        z_mi[0] <<= 1;
                 
         /*
            |....B^(3*split)|....B^(2*split)|........B^split|............B^0|
@@ -180,16 +178,7 @@ void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *des
            |...............|...........................z_mi|...............|
          */
         
-        // |...............|...................z_mi+z_lo_hi|...............|
-            gschool::add_r(z_mi.data(), z_mi_len,             dest        + split, split);
-        // |...................z_hi+z_mi'_hi|...........................z_lo|
-        if (z_mi_len > split) {
-            std::size_t z_hi_len = dest_len - (2*split);
-            gschool::add_r(z_hi, z_hi_len, z_mi.data() + split, std::min(z_mi_len - split, z_hi_len));
-        }
-        
-        // z_hi*B^(2*split) + z_mi*B^split + z_lo
-        std::copy(z_mi.data(), z_mi.data() + split, dest + split);
+        gschool::add_r(dest + split, z_len - split, z_mi.data(), z_mi_len);
     }
 }
 
@@ -197,15 +186,14 @@ std::vector<uint64_t> karatsuba::square(const std::vector<uint64_t>& x)
 {
     std::size_t x_len = x.size();
     
-    if (x_len == 0 || (x_len == 1 && x[0] == 0)) return {0};
+    if (x_len == 1 && x[0] == 0)        return {0};
     if (x_len <= MULT_KARATSUBA_CUTOFF) return gschool::square(x);
-    
     
     std::vector<uint64_t> z(2*x.size(), 0);
     
-    square(x.data(), x.size(), z.data(), z.size());
+    square(x.data(), x.size(), z.data());
     
-    if (z.back() == 0) z.resize(z.size()-1);
+    if (z.back() == 0) z.pop_back();
     
     return z;
 }

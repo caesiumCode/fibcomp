@@ -18,15 +18,15 @@ std::vector<uint64_t>& gschool::add_r(std::vector<uint64_t>& x, const std::vecto
         carry = (carry ? x[i] <= y[i] : x[i] < y[i]);
     }
     
-    for (; i < x_len; i++)
+    for (; i < x_len && carry; i++)
     {
         x[i] += carry;
         
         carry = (x[i] < carry);
     }
     
-    x[i] = carry;
-    if (x[i] == 0) x.resize(len-1);
+    x[i] += carry;
+    if (x.back() == 0) x.pop_back();
     
     return x;
 }
@@ -75,12 +75,12 @@ std::vector<uint64_t> gschool::sub(std::vector<uint64_t> x, const std::vector<ui
 
 std::vector<uint64_t> gschool::mult_s(uint64_t scalar, std::vector<uint64_t> x)
 {
-    std::size_t x_len = x.size();
+    const std::size_t x_len = x.size();
     
     if (scalar == 0 || x_len == 0 || (x_len == 1 && x[0] == 0)) return {0};
     
     uint64_t carry = 0;
-    for (std::size_t i = 0; i < x.size(); i++)
+    for (std::size_t i = 0; i < x_len; i++)
     {
         __uint128_t overflow = __uint128_t(scalar) * __uint128_t(x[i]) + __uint128_t(carry);
         
@@ -95,8 +95,8 @@ std::vector<uint64_t> gschool::mult_s(uint64_t scalar, std::vector<uint64_t> x)
 
 std::vector<uint64_t> gschool::mult(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
 {
-    std::size_t x_len = x.size();
-    std::size_t y_len = y.size();
+    const std::size_t x_len = x.size();
+    const std::size_t y_len = y.size();
     
     if (x_len == 0 || y_len == 0 || (x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return {0};
     
@@ -116,14 +116,14 @@ std::vector<uint64_t> gschool::mult(const std::vector<uint64_t>& x, const std::v
         z[x_len+j] = carry;
     }
     
-    if (carry == 0) z.resize(x_len + y_len - 1);
+    if (carry == 0) z.pop_back();
     
     return z;
 }
 
 std::vector<uint64_t> gschool::square(const std::vector<uint64_t>& x)
 {
-    std::size_t x_len = x.size();
+    const std::size_t x_len = x.size();
     
     if (x_len == 0 || (x_len == 1 && x[0] == 0)) return {0};
     
@@ -199,7 +199,7 @@ void gschool::sub_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, con
 {
     std::size_t i = 0;
     uint64_t borrow = 0;
-    for (i = 0; i < y_len && i < x_len; i++)
+    for (i = 0; i < y_len; i++)
     {
         uint64_t minus = y[i] + borrow;
         borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
@@ -295,9 +295,7 @@ void gschool::square(const uint64_t* x, const std::size_t x_len, uint64_t* dest)
 }
 
 void gschool::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
-{
-    if ((x[0] == 0 && x_len == 1) || (y[0] == 0 && y_len == 1)) return;
-    
+{    
     uint64_t carry = 0;
     for (std::size_t j = 0; j < y_len; j++)
     {

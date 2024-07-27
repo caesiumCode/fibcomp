@@ -2,8 +2,8 @@
 
 void bshift::times4_r(std::vector<uint64_t>& x)
 {
-    std::size_t x_len = x.size();
-    uint64_t mask = uint64_t(3) << 62;
+    const std::size_t x_len = x.size();
+    const uint64_t    mask  = 3ULL << 62;
         
     if (x.back() & mask) x.push_back(x.back() >> 62);
     
@@ -18,8 +18,8 @@ void bshift::times4_r(std::vector<uint64_t>& x)
 
 void bshift::times2_r(std::vector<uint64_t>& x)
 {
-    std::size_t x_len = x.size();
-    uint64_t mask = uint64_t(1) << 63;
+    const std::size_t x_len = x.size();
+    const uint64_t    mask  = 1ULL << 63;
     
     if (x.back() & mask) x.push_back(1);
     
@@ -34,7 +34,7 @@ void bshift::times2_r(std::vector<uint64_t>& x)
 
 void bshift::divide2_r(std::vector<uint64_t>& x)
 {
-    std::size_t len = x.size();
+    const std::size_t len = x.size();
     
     for (std::size_t i = 0; i < len-1; i++)
     {
@@ -43,12 +43,12 @@ void bshift::divide2_r(std::vector<uint64_t>& x)
     }
     
     x.back() >>= 1;
-    if (x.back() == 0 && len > 1) x.resize(len-1);
+    if (x.back() == 0 && len > 1) x.pop_back();
 }
 
 void bshift::divide4_r(std::vector<uint64_t>& x)
 {
-    std::size_t len = x.size();
+    const std::size_t len = x.size();
     
     for (std::size_t i = 0; i < len-1; i++)
     {
@@ -57,5 +57,5 @@ void bshift::divide4_r(std::vector<uint64_t>& x)
     }
     
     x.back() >>= 2;
-    if (x.back() == 0 && len > 1) x.resize(len-1);
+    if (x.back() == 0 && len > 1) x.pop_back();
 }
