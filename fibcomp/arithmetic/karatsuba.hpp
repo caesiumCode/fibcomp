@@ -5,8 +5,9 @@
 
 #include "grade_school.hpp"
 
-#define MULT_KARATSUBA_CUTOFF 70
+#define MULT_KARATSUBA_CUTOFF 50
 //#define MULT_KARATSUBA_CUTOFF 4 // WARNING - 4 is the minimum legal value
+#define SQR_KARATSUBA_CUTOFF 75
 
 namespace karatsuba_old
 {

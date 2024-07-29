@@ -7,9 +7,10 @@
 #include <algorithm>
 #include <iostream>
 
-#include "karatsuba.hpp"
+#include "tomcook.hpp"
 
 #define MULT_KARATSUBA
+#define MULT_TOMCOOK
 
 class uintinf_t
 {

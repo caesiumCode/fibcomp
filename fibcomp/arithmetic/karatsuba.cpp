@@ -83,11 +83,34 @@ void karatsuba::mult(const uint64_t *x, const std::size_t x_len,
     else if (x_len == 1) gschool::mult_s(x[0], y, y_len, dest);
     else if (y_len == 1) gschool::mult_s(y[0], x, x_len, dest);
     else if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) gschool::mult(x, x_len, y, y_len, dest);
-    else if (x_len >= 2*y_len || y_len >= 2*x_len)
+    else if (x_len >= 2*y_len) // y_hi = 0
     {
-        std::cout << "hello" << std::endl;
-        gschool::mult(x, x_len, y, y_len, dest);
+        std::size_t z_len = x_len + y_len;
+        std::size_t split = (x_len + 1) >> 1;
+        std::size_t x_hi_len = x_len - split;
+                
+        mult(x, split, y, y_len, dest); // z_lo = x_lo * y_lo
+        
+        std::size_t plus_len = split + 1;
+        std::vector<uint64_t> x_plus(plus_len, 0);
+        
+        gschool::add(x, split, x+split, x_hi_len, x_plus.data()); // x_lo + x_hi
+        
+        std::size_t z_mi_len = split + 1 + y_len;
+        std::vector<uint64_t> z_mi(z_mi_len, 0);
+        mult(x_plus.data(), plus_len, y, y_len, z_mi.data()); // (x_lo + x_hi) * y_lo
+        
+        gschool::sub_r(z_mi.data(), z_mi_len, dest, 2*split); // (x_lo + x_hi) * y_lo - z_lo
+                
+        /*
+           |....B^(2*split)|........B^split|............B^0|
+           |...........z_hi|...........................z_lo|
+           |...........................z_mi|...............|
+         */
+        
+        gschool::add_r(dest + split, z_len - split, z_mi.data(), z_mi_len);
     }
+    else if (y_len >= 2*x_len) mult(y, y_len, x, x_len, dest);
     else
     {
         std::size_t z_len = x_len + y_len;
@@ -147,7 +170,7 @@ std::vector<uint64_t> karatsuba::mult(const std::vector<uint64_t>& x, const std:
 void karatsuba::square(const uint64_t *x, const std::size_t x_len, uint64_t *dest)
 {
     if      (x_len == 0) return;
-    else if (x_len <= MULT_KARATSUBA_CUTOFF) gschool::square(x, x_len, dest);
+    else if (x_len <= SQR_KARATSUBA_CUTOFF) gschool::square(x, x_len, dest);
     else
     {
         std::size_t z_len = 2*x_len;
@@ -186,8 +209,8 @@ std::vector<uint64_t> karatsuba::square(const std::vector<uint64_t>& x)
 {
     std::size_t x_len = x.size();
     
-    if (x_len == 1 && x[0] == 0)        return {0};
-    if (x_len <= MULT_KARATSUBA_CUTOFF) return gschool::square(x);
+    if (x_len == 1 && x[0] == 0)       return {0};
+    if (x_len <= SQR_KARATSUBA_CUTOFF) return gschool::square(x);
     
     std::vector<uint64_t> z(2*x.size(), 0);
     

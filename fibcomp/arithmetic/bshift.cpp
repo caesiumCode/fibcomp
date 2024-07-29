@@ -59,3 +59,10 @@ void bshift::divide4_r(std::vector<uint64_t>& x)
     x.back() >>= 2;
     if (x.back() == 0 && len > 1) x.pop_back();
 }
+
+
+std::vector<uint64_t> bshift::times2(std::vector<uint64_t> x)
+{
+    times2_r(x);
+    return x;
+}

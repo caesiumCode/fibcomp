@@ -51,7 +51,13 @@ uintinf_t operator-(uintinf_t x, const uintinf_t& y)
     return gschool::sub(x.m_digits, y.m_digits);
 }
 
-#if defined(MULT_KARATSUBA)
+
+#if defined(MULT_TOMCOOK)
+uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
+{
+    return tomcook::mult(x.m_digits, y.m_digits);
+}
+#elif defined(MULT_KARATSUBA)
 uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
 {
     return karatsuba::mult(x.m_digits, y.m_digits);
@@ -121,9 +127,17 @@ void swap(uintinf_t& x, uintinf_t& y)
 
 std::string uintinf_t::to_string() const
 {
-    std::string s;
-    for (uint64_t d : m_digits) s += "[" + std::to_string(d) + "]";
+    
+    std::string s = std::to_string(m_digits[0]);
+    for (std::size_t i = 1; i < m_digits.size(); i++) s += " + " + std::to_string(m_digits[i]) + " * B**" + std::to_string(i);
     return s;
+     
+    /*
+    std::string s = "{" + std::to_string(m_digits[0]) + "ULL";
+    for (std::size_t i = 1; i < m_digits.size(); i++) s += ", " + std::to_string(m_digits[i]) + "ULL";
+    s += "}";
+    return s;
+     */
 }
 
 uint64_t uintinf_t::to_uint64() const

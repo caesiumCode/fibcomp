@@ -2,18 +2,24 @@
 #define grade_school_hpp
 
 #include "bshift.hpp"
+#include "cmp.hpp"
 
 namespace gschool
 {
 
-std::vector<uint64_t>& add_r(std::vector<uint64_t>&, const std::vector<uint64_t>&);
-std::vector<uint64_t>& sub_r(std::vector<uint64_t>&, const std::vector<uint64_t>&);
-std::vector<uint64_t>  add  (std::vector<uint64_t>,  const std::vector<uint64_t>&);
-std::vector<uint64_t>  sub  (std::vector<uint64_t>,  const std::vector<uint64_t>&);
+std::vector<uint64_t>& add_r    (       std::vector<uint64_t>&, const std::vector<uint64_t>&);
+std::vector<uint64_t>& sub_r    (       std::vector<uint64_t>&, const std::vector<uint64_t>&);
+std::vector<uint64_t>  add      (       std::vector<uint64_t>,  const std::vector<uint64_t>&);
+std::vector<uint64_t>  sub      (       std::vector<uint64_t>,  const std::vector<uint64_t>&);
+
+std::vector<uint64_t>  sub_sgn  (const bool, const  std::vector<uint64_t>&, const bool, const std::vector<uint64_t>&, bool&);
+std::vector<uint64_t>  add_sgn  (const bool, const  std::vector<uint64_t>&, const bool, const std::vector<uint64_t>&, bool&);
 
 std::vector<uint64_t>  mult_s(uint64_t, std::vector<uint64_t>);
 std::vector<uint64_t>  mult  (const std::vector<uint64_t>&, const std::vector<uint64_t>&);
 std::vector<uint64_t>  square(const std::vector<uint64_t>&);
+
+std::vector<uint64_t>& divide_by_3_r(std::vector<uint64_t>&);
 
 
 /** WARNING **/

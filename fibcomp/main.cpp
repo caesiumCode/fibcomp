@@ -70,12 +70,46 @@ void find_thresholds(double time_limit = 1)
 
 void    compare_to_ref();
 double  running_time_high_precision(Fibonacci&, uint64_t, uint64_t = 10);
+void    test_mult_algo(int n);
+double  running_time_mult(int n);
+double  running_time_square(int n);
 
 int main(int argc, const char * argv[]) 
 {
+    /*
+    std::vector<uint64_t> x = {1772282049ULL, 1146213653ULL, 1484552381ULL, 1406856621ULL, 1244275677ULL, 345548853ULL, 843790883ULL, 1758849440ULL, 870137125ULL, 31023805ULL, 1726048061ULL, 1480657551ULL, 370958221ULL, 549793106ULL, 1898083148ULL, 213892251ULL};
+    std::vector<uint64_t> y = {2146921126ULL, 1283127788ULL, 497949742ULL, 297541435ULL, 1436967829ULL, 517207841ULL, 1845864278ULL, 892155784ULL, 731438334ULL, 1087684110ULL, 1326033506ULL, 59846776ULL, 822417436ULL, 1165094760ULL, 991737974ULL};
+    
+    std::vector<uint64_t> z_test = tomcook::mult(x, y);
+    std::vector<uint64_t> z_ref = gschool::mult(x, y);
+    
+    std::cout << uintinf_t(z_test).to_string() << std::endl << std::endl;
+    std::cout << uintinf_t(z_ref).to_string() << std::endl;
+     */
+     
+    /*
+    std::vector<uint64_t> x = {18446744072410102229ULL, 62842680ULL, 18446744071197053212ULL, 18446744072119826548ULL, 481772383ULL, 1135108698ULL};
+    std::vector<uint64_t> y = {1123474284ULL, 1556066764ULL, 758249382ULL, 18446744072919408941ULL, 110934322ULL, 457361065ULL};
+    
+    std::vector<uint64_t> z_test = tomcook::mult(x, y);
+    std::vector<uint64_t> z_ref = gschool::mult(x, y);
+    
+    std::cout << uintinf_t(z_test).to_string() << std::endl << std::endl;
+    std::cout << uintinf_t(z_ref).to_string() << std::endl;
+*/
+    
+    std::cout << running_time_mult(100) << std::endl;
+    
+    //test_mult_algo(1000);
+    /*
+    for (int n = 0; n <= 10; n++)
+    {
+        std::cout << MULT_KARATSUBA_CUTOFF << "," << running_time_square(10000) << std::endl;
+    }*/
+    
     //find_thresholds(1);
     
-    compare_to_ref();
+    //compare_to_ref();
     
     //FibonacciFmatTriangle algo;
     //std::cout << running_time_high_precision(algo, 20000000, 1) << "s" << std::endl;
@@ -104,7 +138,7 @@ void compare_to_ref()
     
     bool ONE_ERROR = false;
     
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 1000; i++)
     {
         uint64_t n = rand() % 300000;
         
@@ -134,4 +168,76 @@ double running_time_high_precision(Fibonacci& algo, uint64_t n, uint64_t N)
     std::sort(data.begin(), data.end());
     
     return data[N/2];
+}
+
+void test_mult_algo(int n)
+{
+    bool all_check = true;
+    srand((unsigned)time(nullptr));
+    for (int i = 0; i < n; i++)
+    {
+        std::size_t x_len = 5 + rand()%1000;
+        std::size_t y_len = 5 + rand()%1000;
+        
+        std::vector<uint64_t> x(x_len);
+        std::vector<uint64_t> y(y_len);
+        
+        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
+        for (std::size_t i = 0; i < y_len; i++) y[i] = rand();
+        
+        std::vector<uint64_t> z_test = tomcook::mult(x, y);
+        std::vector<uint64_t> z_ref = gschool::mult(x, y);
+        
+        bool check = uintinf_t(z_test).is_equal(z_ref);
+        
+        all_check = check && all_check;
+        
+        if (!check) std::cout << "x=" << uintinf_t(x).to_string() << std::endl << "y=" << uintinf_t(y).to_string() << std::endl << std::endl;
+    }
+    
+    std::cout << (all_check ? "GOOD" : "BAD") << std::endl;
+}
+
+
+double running_time_mult(int n)
+{
+    srand(0);
+    
+    auto T0 = std::chrono::steady_clock::now();
+    for (int i = 0; i < n; i++)
+    {
+        std::size_t x_len = 100000;
+        std::size_t y_len = 100000;
+        
+        std::vector<uint64_t> x(x_len);
+        std::vector<uint64_t> y(y_len);
+        
+        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
+        for (std::size_t i = 0; i < y_len; i++) y[i] = rand();
+        
+        std::vector<uint64_t> z_test = tomcook::mult(x, y);
+    }
+    auto T1 = std::chrono::steady_clock::now();
+    
+    return std::chrono::duration<double>(T1 - T0).count() / double(n);;
+}
+
+double running_time_square(int n)
+{
+    srand(0);
+    
+    auto T0 = std::chrono::steady_clock::now();
+    for (int i = 0; i < n; i++)
+    {
+        std::size_t x_len = 4 + rand()%2000;
+        
+        std::vector<uint64_t> x(x_len);
+
+        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
+        
+        std::vector<uint64_t> z_test = karatsuba::square(x);
+    }
+    auto T1 = std::chrono::steady_clock::now();
+    
+    return std::chrono::duration<double, std::micro>(T1 - T0).count() / double(n);;
 }

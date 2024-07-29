@@ -1,9 +1,14 @@
 #ifndef tomcook_hpp
 #define tomcook_hpp
 
-#include "karatsuba.hpp"
+#include <iostream>
 
-#define MULT_TOMCOOK_CUTOFF 2
+#include "uintinf_t.hpp"
+#include "karatsuba.hpp"
+#include "cmp.hpp"
+
+#define MULT_TOMCOOK_CUTOFF 750
+//#define MULT_TOMCOOK_CUTOFF 5
 
 namespace tomcook
 {
