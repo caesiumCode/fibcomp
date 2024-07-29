@@ -14,6 +14,9 @@ void divide4_r(std::vector<uint64_t>&);
 
 std::vector<uint64_t> times2(std::vector<uint64_t>);
 
+void multiply_by_2_r(uint64_t*, const std::size_t);
+void divide_by_2_r(uint64_t*, const std::size_t);
+
 }
 
 #endif /* bshift_hpp */

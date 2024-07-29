@@ -66,3 +66,26 @@ std::vector<uint64_t> bshift::times2(std::vector<uint64_t> x)
     times2_r(x);
     return x;
 }
+
+void bshift::multiply_by_2_r(uint64_t* x, const std::size_t x_len)
+{
+    for (std::size_t i = x_len-1; i > 0; i--)
+    {
+        x[i] <<= 1;
+        x[i] |= (x[i-1] >> 63);
+    }
+    
+    x[0] <<= 1;
+}
+
+void bshift::divide_by_2_r(uint64_t* x, const std::size_t x_len)
+{
+    std::size_t i;
+    for (i = 0; i < x_len-1; i++)
+    {
+        x[i] >>= 1;
+        x[i] |= (x[i+1] << 63);
+    }
+    
+    x[i] >>= 1;
+}

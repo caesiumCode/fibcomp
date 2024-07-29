@@ -1,6 +1,6 @@
 #include "tomcook.hpp"
 
-std::vector<uint64_t> tomcook::mult(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
+std::vector<uint64_t> tomcook_old::mult(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
 {
     std::size_t x_len = x.size();
     std::size_t y_len = y.size();
@@ -128,4 +128,342 @@ std::vector<uint64_t> tomcook::mult(const std::vector<uint64_t>& x, const std::v
     if (z0.back() == 0) z0.pop_back();
     
     return z0;
+}
+
+
+
+std::vector<uint64_t> tomcook::mult(const std::vector<uint64_t>& x, const std::vector<uint64_t>& y)
+{
+    std::size_t x_len = x.size();
+    std::size_t y_len = y.size();
+    
+    if (x_len == 0 || y_len == 0 || (x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return {0};
+    else if (x_len == 1) return gschool::mult_s(x[0], y);
+    else if (y_len == 1) return gschool::mult_s(y[0], x);
+    else if (x_len <= MULT_KARATSUBA_CUTOFF && y_len <= MULT_KARATSUBA_CUTOFF) return gschool::mult(x, y);
+    else if (x_len <= MULT_TOMCOOK_CUTOFF   && y_len <= MULT_TOMCOOK_CUTOFF)   return karatsuba::mult(x, y);
+    
+    std::vector<uint64_t> z(x_len + y_len, 0);
+    
+    mult(x.data(), x_len, y.data(), y_len, z.data());
+    
+    if (z.back() == 0) z.pop_back();
+    
+    return z;
+}
+
+
+void tomcook::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
+{
+    if (x_len == 0 || y_len == 0 || (x_len == 1 && x[0] == 0) || (y_len == 1 && y[0] == 0)) return;
+    else if (x_len == 1) gschool::mult_s(x[0], y, y_len, dest);
+    else if (y_len == 1) gschool::mult_s(y[0], x, x_len, dest);
+    else if (x_len <= MULT_KARATSUBA_CUTOFF  && y_len <= MULT_KARATSUBA_CUTOFF) gschool::mult(x, x_len, y, y_len, dest);
+    else if (x_len <= MULT_TOMCOOK_CUTOFF    && y_len <= MULT_TOMCOOK_CUTOFF)   karatsuba::mult(x, x_len, y, y_len, dest);
+    else if (x_len >= 3*y_len)
+    {
+        std::size_t z_len = x_len + y_len;
+        std::size_t split = (std::max(x_len, y_len) + 2) / 3;
+        
+        std::size_t x0_len = std::min(split, x_len);
+        std::size_t x1_len = std::min(split, x_len - x0_len);
+        std::size_t x2_len = x_len - x0_len - x1_len;
+        
+        const uint64_t* x0 = x;
+        const uint64_t* x1 = x0 + x0_len;
+        const uint64_t* x2 = x1 + x1_len;
+        
+        mult(x0, x0_len, y, y_len, dest);
+        mult(x2, x2_len, y, y_len, dest + (2*split));
+        
+        std::vector<uint64_t> z1(x1_len + y_len, 0);
+        mult(x1, x1_len, y, y_len, z1.data());
+        
+        gschool::add_r(dest + split, z_len - split, z1.data(), z1.size());
+    }
+    else if (y_len >= 3*x_len) return mult(y, y_len, x, x_len, dest);
+    else
+    {
+        std::size_t z_len = x_len + y_len;
+        std::size_t split = (std::max(x_len, y_len) + 2) / 3;
+        
+        // p(t) = x_2 t^2 + x_1 t + x_0
+        std::size_t x0_len = std::min(split, x_len);
+        std::size_t x1_len = std::min(split, x_len - x0_len);
+        std::size_t x2_len = x_len - x0_len - x1_len;
+        
+        const uint64_t* x0 = x;
+        const uint64_t* x1 = x0 + x0_len;
+        const uint64_t* x2 = x1 + x1_len;
+        
+        // if (x_len == 6 && y_len == 6) std::cout << "x0 = " << uintinf_t(std::vector<uint64_t>(x0, x0+x0_len)).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "x1 = " << uintinf_t(std::vector<uint64_t>(x1, x1+x1_len)).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "x2 = " << uintinf_t(std::vector<uint64_t>(x2, x2+x2_len)).to_string() << std::endl << std::endl;
+        
+        // p(0), p(1), p(-1), p(-2), p(+inf)
+        std::vector<uint64_t> tmp(std::max(x0_len, x2_len) + 1, 0);
+        gschool::add(x0, x0_len, x2, x2_len, tmp.data());
+        //cmp::trim(tmp);
+        // if (x_len == 6 && y_len == 6) std::cout << "tmp = " << uintinf_t(tmp).to_string() << std::endl;
+        
+        // p0 = x0
+        
+        std::vector<uint64_t> p1(std::max(tmp.size(), x1_len) + 1, 0);
+        gschool::add(tmp.data(), tmp.size(), x1, x1_len, p1.data());
+        //cmp::trim(p1);
+        // if (x_len == 6 && y_len == 6) std::cout << "p(1) = " << uintinf_t(p1).to_string() << std::endl;
+        
+        bool pm1_sgn;
+        std::vector<uint64_t> pm1(std::max(tmp.size(), x1_len) + 1, 0);
+        gschool::sub_sgn(false, tmp.data(), tmp.size(), false, x1, x1_len, pm1_sgn, pm1.data());
+        //cmp::trim(pm1);
+        // if (x_len == 6 && y_len == 6) std::cout << "p(-1) = " << (pm1_sgn ? "-" : "") << uintinf_t(pm1).to_string() << std::endl;
+        
+        bool pm2_sgn;
+        std::vector<uint64_t> pm2(std::max(pm1.size(), x2_len) + 3, 0);
+        gschool::add_sgn(pm1_sgn, pm1.data(), pm1.size(), false, x2, x2_len, pm2_sgn, pm2.data());
+        bshift::multiply_by_2_r(pm2.data(), pm2.size());
+        gschool::sub_sgn(pm2_sgn, pm2.data(), pm2.size(), false, x0, x0_len, pm2_sgn, pm2.data());
+        //cmp::trim(pm2);
+        // if (x_len == 6 && y_len == 6) std::cout << "p(-2) = " << (pm2_sgn ? "-" : "") << uintinf_t(pm2).to_string() << std::endl << std::endl;
+        
+        // pinf = x2;
+        
+        // q(t) = y_2 t^2 + y_1 t + y_0
+        std::size_t y0_len = std::min(split, y_len);
+        std::size_t y1_len = std::min(split, y_len - y0_len);
+        std::size_t y2_len = y_len - y0_len - y1_len;
+        
+        const uint64_t* y0 = y;
+        const uint64_t* y1 = y0 + y0_len;
+        const uint64_t* y2 = y1 + y1_len;
+        
+        // if (x_len == 6 && y_len == 6) std::cout << "y0 = " << uintinf_t(std::vector<uint64_t>(y0, y0+y0_len)).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "y1 = " << uintinf_t(std::vector<uint64_t>(y1, y1+y1_len)).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "y2 = " << uintinf_t(std::vector<uint64_t>(y2, y2+y2_len)).to_string() << std::endl << std::endl;
+        
+        // q(0), q(1), q(-1), q(-2), q(+inf)
+        std::vector<uint64_t> tmq(std::max(y0_len, y2_len) + 1, 0);
+        gschool::add(y0, y0_len, y2, y2_len, tmq.data());
+        //cmp::trim(tmq);
+        // if (x_len == 6 && y_len == 6) std::cout << "tmq = " << uintinf_t(tmq).to_string() << std::endl;
+        
+        // q0 = y0
+        
+        std::vector<uint64_t> q1(std::max(tmq.size(), y1_len) + 1, 0);
+        gschool::add(tmq.data(), tmq.size(), y1, y1_len, q1.data());
+        //cmp::trim(q1);
+        // if (x_len == 6 && y_len == 6) std::cout << "q(1) = " << uintinf_t(q1).to_string() << std::endl;
+        
+        bool qm1_sgn;
+        std::vector<uint64_t> qm1(std::max(tmq.size(), y1_len) + 1, 0);
+        gschool::sub_sgn(false, tmq.data(), tmq.size(), false, y1, y1_len, qm1_sgn, qm1.data());
+        //cmp::trim(qm1);
+        // if (x_len == 6 && y_len == 6) std::cout << "q(-1) = " << (qm1_sgn ? "-" : "") << uintinf_t(qm1).to_string() << std::endl;
+        
+        bool qm2_sgn;
+        std::vector<uint64_t> qm2(std::max(qm1.size(), y2_len) + 3, 0);
+        gschool::add_sgn(qm1_sgn, qm1.data(), qm1.size(), false, y2, y2_len, qm2_sgn, qm2.data());
+        bshift::multiply_by_2_r(qm2.data(), qm2.size());
+        gschool::sub_sgn(qm2_sgn, qm2.data(), qm2.size(), false, y0, y0_len, qm2_sgn, qm2.data());
+        //cmp::trim(qm2);
+        // if (x_len == 6 && y_len == 6) std::cout << "q(-2) = " << (qm2_sgn ? "-" : "") << uintinf_t(qm2).to_string() << std::endl << std::endl;
+        
+        // qinf = y2;
+        
+        // r(0), r(1), r(-1), r(-2), r(+inf)
+        std::size_t rinf_len = (4*split <= z_len) ? z_len - (4*split) : 0;
+        uint64_t* r0   = dest;
+        uint64_t* rinf = dest + (4*split);
+        mult(x0, x0_len, y0, y0_len, r0);
+        mult(x2, x2_len, y2, y2_len, rinf);
+        
+        cmp::trim(p1);
+        cmp::trim(pm1);
+        cmp::trim(pm2);
+        cmp::trim(q1);
+        cmp::trim(qm1);
+        cmp::trim(qm2);
+        
+        std::vector<uint64_t> r1(p1.size() + q1.size(), 0);
+        std::vector<uint64_t> rm1(pm1.size() + qm1.size(), 0);
+        std::vector<uint64_t> rm2(pm2.size() + qm2.size(), 0);
+        
+        mult(p1.data(), p1.size(), q1.data(), q1.size(), r1.data());
+        mult(pm1.data(), pm1.size(), qm1.data(), qm1.size(), rm1.data());
+        mult(pm2.data(), pm2.size(), qm2.data(), qm2.size(), rm2.data());
+        
+        if (r1.back()  == 0) r1.pop_back();
+        if (rm1.back() == 0) rm1.pop_back();
+        if (rm2.back() == 0) rm2.pop_back();
+        
+        bool rm1_sgn = (pm1_sgn != qm1_sgn);
+        bool rm2_sgn = (pm2_sgn != qm2_sgn);
+        
+        // if (x_len == 6 && y_len == 6) std::cout << "r(1) = " << uintinf_t(r1).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "r(-1) = " << (rm2_sgn ? "-" : "")  << uintinf_t(rm1).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "r(-2) = " << (rm2_sgn ? "-" : "")  << uintinf_t(rm2).to_string() << std::endl << std::endl;
+        
+        // interpolation
+        std::vector<uint64_t> z1(2*split + 1, 0);
+        std::vector<uint64_t> z2(2*split + 2, 0);
+        std::vector<uint64_t> z3(2*split + 1, 0);
+        bool z1_sgn, z2_sgn, z3_sgn;
+        
+        gschool::sub_sgn(rm2_sgn, rm2.data(), rm2.size(), false, r1.data(), r1.size(), z3_sgn, z3.data());
+        // if (x_len == 6 && y_len == 6) std::cout << "z3 = r(−2) − r(1) = " << (z3_sgn ? "-" : "") << uintinf_t(z3).to_string() << std::endl;
+        gschool::divide_by_3_r(z3.data(), z3.size());
+        //cmp::trim(z3);
+        // if (x_len == 6 && y_len == 6) std::cout << "z3 = (r(−2) − r(1))/3 = " << (z3_sgn ? "-" : "") << uintinf_t(z3).to_string() << std::endl;
+        
+        gschool::sub_sgn(false, r1.data(), r1.size(), rm1_sgn, rm1.data(), rm1.size(), z1_sgn, z1.data());
+        bshift::divide_by_2_r(z1.data(), z1.size());
+        //cmp::trim(z1);
+        // if (x_len == 6 && y_len == 6) std::cout << "z1 = (r(1) − r(−1))/2 = " << (z1_sgn ? "-" : "") << uintinf_t(z1).to_string() << std::endl;
+        
+        gschool::sub_sgn(rm1_sgn, rm1.data(), rm1.size(), false, r0, x0_len + y0_len, z2_sgn, z2.data());
+        //cmp::trim(z2);
+        // if (x_len == 6 && y_len == 6) std::cout << "z2 = r(-1) - r(0) = " << (z2_sgn ? "-" : "") << uintinf_t(z2).to_string() << std::endl;
+        
+        //z3.resize(std::max(z2.size(), z3.size()) + 1, 0);
+        gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), z3_sgn, z3.data(), z3.size(), z3_sgn, z3.data());
+        bshift::divide_by_2_r(z3.data(), z3.size());
+        //cmp::trim(z3);
+        // if (x_len == 6 && y_len == 6) std::cout << "z3 = (r2 − r3)/2 = " << (z3_sgn ? "-" : "") << uintinf_t(z3).to_string() << std::endl;
+        
+        //z3.resize(std::max(rinf_len, z3.size()) + 1, 0);
+        gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
+        gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
+        //cmp::trim(z3);
+        // if (x_len == 6 && y_len == 6) std::cout << "z3 = (r2 − r3)/2 + 2r(∞) = " << (z3_sgn ? "-" : "") << uintinf_t(z3).to_string() << std::endl;
+        
+        //z2.resize(std::max(z1.size(), z2.size()) + 1, 0);
+        //z2.resize(std::max(rinf_len, z2.size()) + 1, 0);
+        gschool::add_sgn(z2_sgn, z2.data(), z2.size(), z1_sgn, z1.data(), z1.size(), z2_sgn, z2.data());
+        // if (x_len == 6 && y_len == 6) std::cout << "z2 = z2 + z1 = " << (z2_sgn ? "-" : "") << uintinf_t(z2).to_string() << std::endl;
+        gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), false, rinf, rinf_len, z2_sgn, z2.data());
+        // if (x_len == 6 && y_len == 6) std::cout << "z2 = z2 - z4 = " << (z2_sgn ? "-" : "") << uintinf_t(z2).to_string() << std::endl;
+        //cmp::trim(z2);
+        
+        gschool::sub_r(z1.data(), z1.size(), z3.data(), z3.size());
+        //cmp::trim(z1);
+        
+        // if (x_len == 6 && y_len == 6) std::cout << "z1 = " << (z1_sgn ? "-" : "") << uintinf_t(z1).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "z2 = " << (z2_sgn ? "-" : "") << uintinf_t(z2).to_string() << std::endl;
+        // if (x_len == 6 && y_len == 6) std::cout << "z3 = " << (z3_sgn ? "-" : "") << uintinf_t(z3).to_string() << std::endl << std::endl;
+        
+        // Recomposition
+        gschool::add_r(dest + split,   z_len - split,   z1.data(), z1.size());
+        gschool::add_r(dest + 2*split, z_len - 2*split, z2.data(), z2.size());
+        gschool::add_r(dest + 3*split, z_len - 3*split, z3.data(), z3.size());
+    }
+}
+
+std::vector<uint64_t> tomcook::square(const std::vector<uint64_t>& x)
+{
+    std::size_t x_len = x.size();
+    
+    if (x_len == 0 || (x_len == 1 && x[0] == 0)) return {0};
+    else if (x_len <= SQR_KARATSUBA_CUTOFF) return gschool::square(x);
+    else if (x_len <= SQR_TOMCOOK_CUTOFF)   return karatsuba::square(x);
+    
+    std::vector<uint64_t> z(2*x_len, 0);
+    
+    square(x.data(), x_len, z.data());
+    
+    if (z.back() == 0) z.pop_back();
+    
+    return z;
+}
+
+
+void tomcook::square(const uint64_t* x, const std::size_t x_len, uint64_t* dest)
+{
+    if (x_len == 0 || (x_len == 1 && x[0] == 0)) return;
+    else if (x_len <= SQR_KARATSUBA_CUTOFF) gschool::square(x, x_len, dest);
+    else if (x_len <= SQR_TOMCOOK_CUTOFF)   karatsuba::square(x, x_len, dest);
+    else
+    {
+        std::size_t z_len = 2*x_len;
+        std::size_t split = (x_len + 2) / 3;
+        
+        // p(t) = x_2 t^2 + x_1 t + x_0
+        std::size_t x0_len = std::min(split, x_len);
+        std::size_t x1_len = std::min(split, x_len - x0_len);
+        std::size_t x2_len = x_len - x0_len - x1_len;
+        
+        const uint64_t* x0 = x;
+        const uint64_t* x1 = x0 + x0_len;
+        const uint64_t* x2 = x1 + x1_len;
+        
+        // p(0), p(1), p(-1), p(-2), p(+inf)
+        std::vector<uint64_t> tmp(std::max(x0_len, x2_len) + 1, 0);
+        gschool::add(x0, x0_len, x2, x2_len, tmp.data());
+        
+        std::vector<uint64_t> p1(std::max(tmp.size(), x1_len) + 1, 0);
+        gschool::add(tmp.data(), tmp.size(), x1, x1_len, p1.data());
+        
+        bool pm1_sgn;
+        std::vector<uint64_t> pm1(std::max(tmp.size(), x1_len) + 1, 0);
+        gschool::sub_sgn(false, tmp.data(), tmp.size(), false, x1, x1_len, pm1_sgn, pm1.data());
+        
+        bool pm2_sgn;
+        std::vector<uint64_t> pm2(std::max(pm1.size(), x2_len) + 3, 0);
+        gschool::add_sgn(pm1_sgn, pm1.data(), pm1.size(), false, x2, x2_len, pm2_sgn, pm2.data());
+        bshift::multiply_by_2_r(pm2.data(), pm2.size());
+        gschool::sub_sgn(pm2_sgn, pm2.data(), pm2.size(), false, x0, x0_len, pm2_sgn, pm2.data());
+        
+        // r(0), r(1), r(-1), r(-2), r(+inf)
+        std::size_t rinf_len = (4*split <= z_len) ? z_len - (4*split) : 0;
+        uint64_t* r0   = dest;
+        uint64_t* rinf = dest + (4*split);
+        square(x0, x0_len, r0);
+        square(x2, x2_len, rinf);
+        
+        cmp::trim(p1);
+        cmp::trim(pm1);
+        cmp::trim(pm2);
+        
+        std::vector<uint64_t> r1(2*p1.size(), 0);
+        std::vector<uint64_t> rm1(2*pm1.size(), 0);
+        std::vector<uint64_t> rm2(2*pm2.size(), 0);
+        
+        square(p1.data(), p1.size(), r1.data());
+        square(pm1.data(), pm1.size(), rm1.data());
+        square(pm2.data(), pm2.size(), rm2.data());
+        
+        if (r1.back()  == 0) r1.pop_back();
+        if (rm1.back() == 0) rm1.pop_back();
+        if (rm2.back() == 0) rm2.pop_back();
+        
+        // interpolation
+        std::vector<uint64_t> z1(2*split + 1, 0);
+        std::vector<uint64_t> z2(2*split + 2, 0);
+        std::vector<uint64_t> z3(2*split + 1, 0);
+        bool z1_sgn, z2_sgn, z3_sgn;
+        
+        gschool::sub_sgn(false, rm2.data(), rm2.size(), false, r1.data(), r1.size(), z3_sgn, z3.data());
+        gschool::divide_by_3_r(z3.data(), z3.size());
+        
+        gschool::sub_sgn(false, r1.data(), r1.size(), false, rm1.data(), rm1.size(), z1_sgn, z1.data());
+        bshift::divide_by_2_r(z1.data(), z1.size());
+        
+        gschool::sub_sgn(false, rm1.data(), rm1.size(), false, r0, 2*split, z2_sgn, z2.data());
+        
+        gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), z3_sgn, z3.data(), z3.size(), z3_sgn, z3.data());
+        bshift::divide_by_2_r(z3.data(), z3.size());
+        
+        gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
+        gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
+        
+        gschool::add_sgn(z2_sgn, z2.data(), z2.size(), z1_sgn, z1.data(), z1.size(), z2_sgn, z2.data());
+        gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), false, rinf, rinf_len, z2_sgn, z2.data());
+        
+        gschool::sub_r(z1.data(), z1.size(), z3.data(), z3.size());
+        
+        // Recomposition
+        gschool::add_r(dest + split,   z_len - split,   z1.data(), z1.size());
+        gschool::add_r(dest + 2*split, z_len - 2*split, z2.data(), z2.size());
+        gschool::add_r(dest + 3*split, z_len - 3*split, z3.data(), z3.size());
+    }
 }

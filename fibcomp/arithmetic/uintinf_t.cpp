@@ -69,7 +69,12 @@ uintinf_t operator*(const uintinf_t& x, const uintinf_t& y)
 }
 #endif
 
-#if defined(MULT_KARATSUBA)
+#if defined(MULT_TOMCOOK)
+uintinf_t square(const uintinf_t& x)
+{
+    return tomcook::square(x.m_digits);
+}
+#elif defined(MULT_KARATSUBA)
 uintinf_t square(const uintinf_t& x)
 {
     return karatsuba::square(x.m_digits);
@@ -131,13 +136,13 @@ std::string uintinf_t::to_string() const
     std::string s = std::to_string(m_digits[0]);
     for (std::size_t i = 1; i < m_digits.size(); i++) s += " + " + std::to_string(m_digits[i]) + " * B**" + std::to_string(i);
     return s;
-     
+    
     /*
     std::string s = "{" + std::to_string(m_digits[0]) + "ULL";
     for (std::size_t i = 1; i < m_digits.size(); i++) s += ", " + std::to_string(m_digits[i]) + "ULL";
     s += "}";
     return s;
-     */
+    */
 }
 
 uint64_t uintinf_t::to_uint64() const

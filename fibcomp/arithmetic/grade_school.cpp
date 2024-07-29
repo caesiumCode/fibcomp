@@ -287,9 +287,9 @@ void gschool::add(const uint64_t* x, const std::size_t x_len, const uint64_t* y,
         for (i = 0; i < y_len; i++)
         {
             uint64_t plus = x[i] + y[i] + carry;
-            dest[i] = plus;
+            carry = (carry ? plus <= y[i] : plus < y[i]);
             
-            carry = (carry ? dest[i] <= y[i] : dest[i] < y[i]);
+            dest[i] = plus;
         }
         
         for (; i < x_len; i++)
@@ -299,7 +299,74 @@ void gschool::add(const uint64_t* x, const std::size_t x_len, const uint64_t* y,
             carry = (dest[i] < carry);
         }
         
-        dest[i] = carry;
+        dest[i] += carry;
+    }
+}
+
+// Assumes x >= y
+void gschool::sub(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
+{
+    std::size_t i = 0;
+    uint64_t borrow = 0;
+    for (i = 0; i < y_len && i < x_len; i++)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        
+        dest[i] = x[i] - minus;
+    }
+    
+    for (; i < x_len; i++)
+    {
+        dest[i] = x[i] - borrow;
+                
+        borrow = borrow && (dest[i] == UINT64_MAX);
+    }
+}
+
+void gschool::sub_sgn(const bool x_sgn, const uint64_t* x, const std::size_t x_len,
+                      const bool y_sgn, const uint64_t* y, const std::size_t y_len,
+                      bool& sgn,        uint64_t* dest)
+{
+    if (x_sgn != y_sgn) // x-(-y)=x+y or -x-y=-(x+y)
+    {
+        sgn = x_sgn;
+        add(x, x_len, y, y_len, dest);
+    }
+    else if (x_sgn) // -x-(-y)=-x+y=y-x
+    {
+        sgn = cmp::less_than(y, y_len, x, x_len);
+        if (sgn) sub(x, x_len, y, y_len, dest);
+        else     sub(y, y_len, x, x_len, dest);
+    }
+    else // x-y
+    {
+        sgn = cmp::less_than(x, x_len, y, y_len);
+        if (sgn) sub(y, y_len, x, x_len, dest);
+        else     sub(x, x_len, y, y_len, dest);
+    }
+}
+
+void gschool::add_sgn(const bool x_sgn, const uint64_t* x, const std::size_t x_len,
+                      const bool y_sgn, const uint64_t* y, const std::size_t y_len,
+                      bool& sgn,        uint64_t* dest)
+{
+    if (x_sgn == y_sgn) // x+y or -x-y=-(x+y)
+    {
+        sgn = x_sgn;
+        add(x, x_len, y, y_len, dest);
+    }
+    else if (x_sgn && !y_sgn) // -x+y=y-x
+    {
+        sgn = cmp::less_than(y, y_len, x, x_len);
+        if (sgn) sub(x, x_len, y, y_len, dest);
+        else     sub(y, y_len, x, x_len, dest);
+    }
+    else // x-y
+    {
+        sgn = cmp::less_than(x, x_len, y, y_len);
+        if (sgn) sub(y, y_len, x, x_len, dest);
+        else     sub(x, x_len, y, y_len, dest);
     }
 }
 
@@ -371,5 +438,22 @@ void gschool::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y
             carry     = (overflow >> 64);
         }
         dest[x_len+j] = carry;
+    }
+}
+
+
+void gschool::divide_by_3_r(uint64_t* x, const std::size_t x_len)
+{
+    uint64_t carry = 0;
+    for (std::size_t i = 0; i < x_len; i++)
+    {
+        uint64_t s = x[i];
+        x[i] -= carry;
+        carry = (x[i] > s);
+        
+        x[i] *= INVERSE_3;
+        
+        carry += (x[i] > UINT64_MAX/3);
+        carry += (x[i] > (UINT64_MAX/3)*2);
     }
 }
