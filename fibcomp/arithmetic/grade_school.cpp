@@ -277,6 +277,26 @@ void gschool::sub_r(uint64_t* x, const std::size_t x_len, const uint64_t* y, con
     }
 }
 
+// Assumes x >= y
+void gschool::sub_r2(const uint64_t* x, const std::size_t x_len, uint64_t* y, const std::size_t y_len)
+{
+    std::size_t i = 0;
+    uint64_t borrow = 0;
+    for (i = 0; i < y_len && i < x_len; i++)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        y[i] = x[i] - minus;
+    }
+    
+    for (; i < x_len && borrow; i++)
+    {
+        y[i] = x[i] - borrow;
+                
+        borrow = borrow && (y[i] == UINT64_MAX);
+    }
+}
+
 void gschool::add(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
 {
     if (x_len < y_len) add(y, y_len, x, x_len, dest);
@@ -321,6 +341,67 @@ void gschool::sub(const uint64_t* x, const std::size_t x_len, const uint64_t* y,
         dest[i] = x[i] - borrow;
                 
         borrow = borrow && (dest[i] == UINT64_MAX);
+    }
+}
+
+void gschool::sub_r_sgn(bool& x_sgn, uint64_t* x, const std::size_t x_len, const bool y_sgn, const uint64_t* y, const std::size_t y_len)
+{
+    if (x_sgn != y_sgn) // x-(-y)=x+y or -x-y=-(x+y)
+    {
+        add_r(x, x_len, y, y_len);
+    }
+    else if (x_sgn) // -x-(-y)=-x+y=y-x
+    {
+        x_sgn = cmp::less_than(y, y_len, x, x_len);
+        if (x_sgn) sub_r (x, x_len, y, y_len); // -(x-y)
+        else       sub_r2(y, y_len, x, x_len); //   y-x
+    }
+    else // x-y
+    {
+        x_sgn = cmp::less_than(x, x_len, y, y_len);
+        if (x_sgn) sub_r2(y, y_len, x, x_len); // -(y-x)
+        else       sub_r (x, x_len, y, y_len); //   x-y
+    }
+}
+
+void gschool::sub_r2_sgn(const bool x_sgn, const uint64_t* x, const std::size_t x_len, bool& y_sgn, uint64_t* y, const std::size_t y_len)
+{
+    if (x_sgn != y_sgn) // x-(-y)=x+y or -x-y=-(x+y)
+    {
+        y_sgn = x_sgn;
+        add_r(y, y_len, x, x_len);
+    }
+    else if (x_sgn) // -x-(-y)=-x+y=y-x
+    {
+        y_sgn = cmp::less_than(y, y_len, x, x_len);
+        if (y_sgn) sub_r2(x, x_len, y, y_len); // -(x-y)
+        else       sub_r (y, y_len, x, x_len); //   y-x
+    }
+    else // x-y
+    {
+        y_sgn = cmp::less_than(x, x_len, y, y_len);
+        if (y_sgn) sub_r (y, y_len, x, x_len); // -(y-x)
+        else       sub_r2(x, x_len, y, y_len); //   x-y
+    }
+}
+
+void gschool::add_r_sgn(bool& x_sgn, uint64_t* x, const std::size_t x_len, const bool y_sgn, const uint64_t* y, const std::size_t y_len)
+{
+    if (x_sgn == y_sgn) // x+y or -x-y=-(x+y)
+    {
+        add_r(x, x_len, y, y_len);
+    }
+    else if (x_sgn && !y_sgn) // -x+y=y-x
+    {
+        x_sgn = cmp::less_than(y, y_len, x, x_len);
+        if (x_sgn) sub_r (x, x_len, y, y_len); // -(x-y)
+        else       sub_r2(y, y_len, x, x_len); //   y-x
+    }
+    else // x-y
+    {
+        x_sgn = cmp::less_than(x, x_len, y, y_len);
+        if (x_sgn) sub_r2(y, y_len, x, x_len); // -(y-x)
+        else       sub_r (x, x_len, y, y_len); //   x-y
     }
 }
 

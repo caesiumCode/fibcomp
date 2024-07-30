@@ -100,9 +100,9 @@ int main(int argc, const char * argv[])
 */
     
     //std::cout << running_time_mult(100) << std::endl;
-    test_mult_algo(1000);
+    //test_mult_algo(1000);
     
-    test_square_algo(1000);
+    //test_square_algo(1000);
     //std::cout << running_time_square(100) << std::endl;
     
     /*
