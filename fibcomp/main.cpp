@@ -100,9 +100,9 @@ int main(int argc, const char * argv[])
 */
     
     //std::cout << running_time_mult(100) << std::endl;
-    //test_mult_algo(1000);
+    test_mult_algo(1000);
     
-    //test_square_algo(1000);
+    test_square_algo(1000);
     //std::cout << running_time_square(100) << std::endl;
     
     /*
@@ -111,7 +111,7 @@ int main(int argc, const char * argv[])
         std::cout << MULT_KARATSUBA_CUTOFF << "," << running_time_square(10000) << std::endl;
     }*/
     
-    find_thresholds(1);
+    //find_thresholds(1);
     
     //compare_to_ref();
     
@@ -186,8 +186,8 @@ void test_mult_algo(int n)
         std::vector<uint64_t> x(x_len);
         std::vector<uint64_t> y(y_len);
         
-        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
-        for (std::size_t i = 0; i < y_len; i++) y[i] = rand();
+        for (std::size_t i = 0; i < x_len; i++) x[i] = UINT64_MAX;
+        for (std::size_t i = 0; i < y_len; i++) y[i] = UINT64_MAX;
         
         std::vector<uint64_t> z_test = tomcook::mult(x, y);
         std::vector<uint64_t> z_ref = gschool::mult(x, y);

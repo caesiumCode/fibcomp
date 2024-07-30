@@ -212,7 +212,6 @@ void tomcook::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y
         std::vector<uint64_t> pm2(pm1.size() + 2, 0);
         gschool::add_sgn(pm1_sgn, pm1.data(), pm1.size(), false, x2, x2_len, pm2_sgn, pm2.data());
         bshift::multiply_by_2_r(pm2.data(), pm2.size());
-        //gschool::sub_sgn(pm2_sgn, pm2.data(), pm2.size(), false, x0, x0_len, pm2_sgn, pm2.data());
         gschool::sub_r_sgn(pm2_sgn, pm2.data(), pm2.size(), false, x0, x0_len);
         
         // q(t) = y_2 t^2 + y_1 t + y_0
@@ -240,7 +239,6 @@ void tomcook::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y
         std::vector<uint64_t> qm2(qm1.size() + 2, 0);
         gschool::add_sgn(qm1_sgn, qm1.data(), qm1.size(), false, y2, y2_len, qm2_sgn, qm2.data());
         bshift::multiply_by_2_r(qm2.data(), qm2.size());
-        //gschool::sub_sgn(qm2_sgn, qm2.data(), qm2.size(), false, y0, y0_len, qm2_sgn, qm2.data());
         gschool::sub_r_sgn(qm2_sgn, qm2.data(), qm2.size(), false, y0, y0_len);
         
         // r(0), r(1), r(-1), r(-2), r(+inf)
@@ -268,7 +266,7 @@ void tomcook::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y
         
         // interpolation
         std::vector<uint64_t> z1(2*split + 1, 0);
-        std::vector<uint64_t> z2(2*split + 2, 0);
+        std::vector<uint64_t> z2(2*split + 1, 0);
         std::vector<uint64_t> z3(2*split + 1, 0);
         bool z1_sgn, z2_sgn, z3_sgn;
         
@@ -280,18 +278,13 @@ void tomcook::mult(const uint64_t* x, const std::size_t x_len, const uint64_t* y
         
         gschool::sub_sgn(rm1_sgn, rm1.data(), rm1.size(), false, r0, x0_len + y0_len, z2_sgn, z2.data());
         
-        //gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), z3_sgn, z3.data(), z3.size(), z3_sgn, z3.data());
         gschool::sub_r2_sgn(z2_sgn, z2.data(), z2.size(), z3_sgn, z3.data(), z3.size());
         bshift::divide_by_2_r(z3.data(), z3.size());
         
-        //gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
-        //gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
         gschool::add_r_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len);
         gschool::add_r_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len);
         
-        //gschool::add_sgn(z2_sgn, z2.data(), z2.size(), z1_sgn, z1.data(), z1.size(), z2_sgn, z2.data());
         gschool::add_r_sgn(z2_sgn, z2.data(), z2.size(), z1_sgn, z1.data(), z1.size());
-        //gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), false, rinf, rinf_len, z2_sgn, z2.data());
         gschool::sub_r_sgn(z2_sgn, z2.data(), z2.size(), false, rinf, rinf_len);
         
         gschool::sub_r(z1.data(), z1.size(), z3.data(), z3.size());
@@ -355,7 +348,6 @@ void tomcook::square(const uint64_t* x, const std::size_t x_len, uint64_t* dest)
         std::vector<uint64_t> pm2(tmp.size() + 2, 0);
         gschool::add_sgn(pm1_sgn, pm1.data(), pm1.size(), false, x2, x2_len, pm2_sgn, pm2.data());
         bshift::multiply_by_2_r(pm2.data(), pm2.size());
-        //gschool::sub_sgn(pm2_sgn, pm2.data(), pm2.size(), false, x0, x0_len, pm2_sgn, pm2.data());
         gschool::sub_r_sgn(pm2_sgn, pm2.data(), pm2.size(), false, x0, x0_len);
         
         // r(0), r(1), r(-1), r(-2), r(+inf)
@@ -391,18 +383,13 @@ void tomcook::square(const uint64_t* x, const std::size_t x_len, uint64_t* dest)
         
         gschool::sub_sgn(false, rm1.data(), rm1.size(), false, r0, 2*split, z2_sgn, z2.data());
         
-        //gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), z3_sgn, z3.data(), z3.size(), z3_sgn, z3.data());
         gschool::sub_r2_sgn(z2_sgn, z2.data(), z2.size(), z3_sgn, z3.data(), z3.size());
         bshift::divide_by_2_r(z3.data(), z3.size());
         
-        //gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
-        //gschool::add_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len, z3_sgn, z3.data());
         gschool::add_r_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len);
         gschool::add_r_sgn(z3_sgn, z3.data(), z3.size(), false, rinf, rinf_len);
         
-        //gschool::add_sgn(z2_sgn, z2.data(), z2.size(), z1_sgn, z1.data(), z1.size(), z2_sgn, z2.data());
         gschool::add_r_sgn(z2_sgn, z2.data(), z2.size(), z1_sgn, z1.data(), z1.size());
-        //gschool::sub_sgn(z2_sgn, z2.data(), z2.size(), false, rinf, rinf_len, z2_sgn, z2.data());
         gschool::sub_r_sgn(z2_sgn, z2.data(), z2.size(), false, rinf, rinf_len);
         
         gschool::sub_r(z1.data(), z1.size(), z3.data(), z3.size());
