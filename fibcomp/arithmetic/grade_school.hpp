@@ -30,13 +30,8 @@ void sub_r2(const uint64_t* x, const std::size_t x_len,       uint64_t* y, const
 void add   (const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest);
 void sub   (const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest);
 
-void sub_r_sgn (      bool&,      uint64_t* x, const std::size_t x_len, const bool, const uint64_t* y, const std::size_t y_len);
-void sub_r2_sgn(const bool, const uint64_t* x, const std::size_t x_len,       bool&,      uint64_t* y, const std::size_t y_len);
-void add_r_sgn (      bool&,      uint64_t* x, const std::size_t x_len, const bool, const uint64_t* y, const std::size_t y_len);
+void add_r_sgn(bool&, uint64_t* x, const std::size_t x_len, const bool, const uint64_t* y, const std::size_t y_len);
 
-void sub_sgn(const bool, const uint64_t* x, const std::size_t x_len,
-             const bool, const uint64_t* y, const std::size_t y_len,
-                   bool&,      uint64_t* dest);
 void add_sgn(const bool, const uint64_t* x, const std::size_t x_len,
              const bool, const uint64_t* y, const std::size_t y_len,
                    bool&,      uint64_t* dest);

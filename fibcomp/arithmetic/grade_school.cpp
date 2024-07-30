@@ -344,47 +344,6 @@ void gschool::sub(const uint64_t* x, const std::size_t x_len, const uint64_t* y,
     }
 }
 
-void gschool::sub_r_sgn(bool& x_sgn, uint64_t* x, const std::size_t x_len, const bool y_sgn, const uint64_t* y, const std::size_t y_len)
-{
-    if (x_sgn != y_sgn) // x-(-y)=x+y or -x-y=-(x+y)
-    {
-        add_r(x, x_len, y, y_len);
-    }
-    else if (x_sgn) // -x-(-y)=-x+y=y-x
-    {
-        x_sgn = cmp::less_than(y, y_len, x, x_len);
-        if (x_sgn) sub_r (x, x_len, y, y_len); // -(x-y)
-        else       sub_r2(y, y_len, x, x_len); //   y-x
-    }
-    else // x-y
-    {
-        x_sgn = cmp::less_than(x, x_len, y, y_len);
-        if (x_sgn) sub_r2(y, y_len, x, x_len); // -(y-x)
-        else       sub_r (x, x_len, y, y_len); //   x-y
-    }
-}
-
-void gschool::sub_r2_sgn(const bool x_sgn, const uint64_t* x, const std::size_t x_len, bool& y_sgn, uint64_t* y, const std::size_t y_len)
-{
-    if (x_sgn != y_sgn) // x-(-y)=x+y or -x-y=-(x+y)
-    {
-        y_sgn = x_sgn;
-        add_r(y, y_len, x, x_len);
-    }
-    else if (x_sgn) // -x-(-y)=-x+y=y-x
-    {
-        y_sgn = cmp::less_than(y, y_len, x, x_len);
-        if (y_sgn) sub_r2(x, x_len, y, y_len); // -(x-y)
-        else       sub_r (y, y_len, x, x_len); //   y-x
-    }
-    else // x-y
-    {
-        y_sgn = cmp::less_than(x, x_len, y, y_len);
-        if (y_sgn) sub_r (y, y_len, x, x_len); // -(y-x)
-        else       sub_r2(x, x_len, y, y_len); //   x-y
-    }
-}
-
 void gschool::add_r_sgn(bool& x_sgn, uint64_t* x, const std::size_t x_len, const bool y_sgn, const uint64_t* y, const std::size_t y_len)
 {
     if (x_sgn == y_sgn) // x+y or -x-y=-(x+y)
@@ -402,29 +361,6 @@ void gschool::add_r_sgn(bool& x_sgn, uint64_t* x, const std::size_t x_len, const
         x_sgn = cmp::less_than(x, x_len, y, y_len);
         if (x_sgn) sub_r2(y, y_len, x, x_len); // -(y-x)
         else       sub_r (x, x_len, y, y_len); //   x-y
-    }
-}
-
-void gschool::sub_sgn(const bool x_sgn, const uint64_t* x, const std::size_t x_len,
-                      const bool y_sgn, const uint64_t* y, const std::size_t y_len,
-                      bool& sgn,        uint64_t* dest)
-{
-    if (x_sgn != y_sgn) // x-(-y)=x+y or -x-y=-(x+y)
-    {
-        sgn = x_sgn;
-        add(x, x_len, y, y_len, dest);
-    }
-    else if (x_sgn) // -x-(-y)=-x+y=y-x
-    {
-        sgn = cmp::less_than(y, y_len, x, x_len);
-        if (sgn) sub(x, x_len, y, y_len, dest);
-        else     sub(y, y_len, x, x_len, dest);
-    }
-    else // x-y
-    {
-        sgn = cmp::less_than(x, x_len, y, y_len);
-        if (sgn) sub(y, y_len, x, x_len, dest);
-        else     sub(x, x_len, y, y_len, dest);
     }
 }
 

@@ -186,8 +186,8 @@ void test_mult_algo(int n)
         std::vector<uint64_t> x(x_len);
         std::vector<uint64_t> y(y_len);
         
-        for (std::size_t i = 0; i < x_len; i++) x[i] = UINT64_MAX;
-        for (std::size_t i = 0; i < y_len; i++) y[i] = UINT64_MAX;
+        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
+        for (std::size_t i = 0; i < y_len; i++) y[i] = rand();
         
         std::vector<uint64_t> z_test = tomcook::mult(x, y);
         std::vector<uint64_t> z_ref = gschool::mult(x, y);
