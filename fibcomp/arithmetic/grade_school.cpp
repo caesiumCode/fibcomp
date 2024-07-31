@@ -288,13 +288,6 @@ void gschool::sub_r2(const uint64_t* x, const std::size_t x_len, uint64_t* y, co
         borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
         y[i] = x[i] - minus;
     }
-    
-    for (; i < x_len && borrow; i++)
-    {
-        y[i] = x[i] - borrow;
-                
-        borrow = borrow && (y[i] == UINT64_MAX);
-    }
 }
 
 void gschool::add(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest)
@@ -472,5 +465,256 @@ void gschool::divide_by_3_r(uint64_t* x, const std::size_t x_len)
         
         carry += (x[i] > UINT64_MAX/3);
         carry += (x[i] > (UINT64_MAX/3)*2);
+    }
+}
+
+
+
+
+
+
+
+
+void gschool::add(const uint64_t* x, const std::size_t x_len,
+                  const uint64_t* y, const std::size_t y_len,
+                  uint64_t* dest, const std::size_t dest_len, uint64_t& c)
+{
+    if (x_len < y_len) add(y, y_len, x, x_len, dest, dest_len, c);
+    else
+    {
+        std::size_t i = 0;
+        uint64_t carry = 0;
+        for (i = 0; i < y_len && i < dest_len; i++)
+        {
+            uint64_t plus = x[i] + y[i] + carry;
+            carry = (carry ? plus <= y[i] : plus < y[i]);
+            
+            dest[i] = plus;
+        }
+        
+        for (; i < x_len && i < dest_len; i++)
+        {
+            dest[i] = x[i] + carry;
+            
+            carry = (dest[i] < carry);
+        }
+        
+        if (i == dest_len) c = (i < x_len ? x[i] : 0) + carry;
+    }
+}
+
+// Assumes x >= y
+void gschool::sub(const uint64_t* x, const std::size_t x_len, 
+                  const uint64_t* y, const std::size_t y_len,
+                  uint64_t* dest, const std::size_t dest_len, uint64_t& dest_top)
+{
+    std::size_t i = 0;
+    uint64_t borrow = 0;
+    for (i = 0; i < y_len && i < x_len && i < dest_len; i++)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        
+        dest[i] = x[i] - minus;
+    }
+    
+    if (i == dest_len && i < y_len && i < x_len)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        
+        dest_top = x[i] - minus;
+        
+        i++;
+    }
+    
+    for (; i < x_len && i < dest_len; i++)
+    {
+        dest[i] = x[i] - borrow;
+                
+        borrow = borrow && (dest[i] == UINT64_MAX);
+    }
+    
+    if (i == dest_len && i < x_len) dest_top = x[i] - borrow;
+}
+
+void gschool::add_sgn(const bool x_sgn, const uint64_t* x, const std::size_t x_len,
+                      const bool y_sgn, const uint64_t* y, const std::size_t y_len,
+                      bool& sgn,        uint64_t* dest, const std::size_t dest_len, uint64_t& c)
+{
+    if (x_sgn == y_sgn) // x+y or -x-y=-(x+y)
+    {
+        sgn = x_sgn;
+        add(x, x_len, y, y_len, dest, dest_len, c);
+    }
+    else if (x_sgn && !y_sgn) // -x+y=y-x
+    {
+        sgn = cmp::less_than(y, y_len, x, x_len);
+        if (sgn) sub(x, x_len, y, y_len, dest, dest_len, c);
+        else     sub(y, y_len, x, x_len, dest, dest_len, c);
+    }
+    else // x-y
+    {
+        sgn = cmp::less_than(x, x_len, y, y_len);
+        if (sgn) sub(y, y_len, x, x_len, dest, dest_len, c);
+        else     sub(x, x_len, y, y_len, dest, dest_len, c);
+    }
+}
+
+void gschool::add_r_sgn(      bool& x_sgn,      uint64_t* x, const std::size_t x_len,       uint64_t& x_top,
+                        const bool y_sgn, const uint64_t* y, const std::size_t y_len, const uint64_t y_top)
+{
+    if (x_sgn == y_sgn) // x+y or -x-y=-(x+y)
+    {
+        add_r(x, x_len, x_top, y, y_len, y_top);
+    }
+    else if (x_sgn && !y_sgn) // -x+y=y-x
+    {
+        x_sgn = cmp::less_than(y, y_len, y_top, x, x_len, x_top);
+        if (x_sgn) sub_r (x, x_len, x_top, y, y_len, y_top); // -(x-y)
+        else       sub_r2(y, y_len, y_top, x, x_len, x_top); //   y-x
+    }
+    else // x-y
+    {
+        x_sgn = cmp::less_than(x, x_len, x_top, y, y_len, y_top);
+        if (x_sgn) sub_r2(y, y_len, y_top, x, x_len, x_top); // -(y-x)
+        else       sub_r (x, x_len, x_top, y, y_len, y_top); //   x-y
+    }
+}
+
+void gschool::add_r(      uint64_t* x, const std::size_t x_len,       uint64_t& x_top,
+                    const uint64_t* y, const std::size_t y_len, const uint64_t y_top)
+{
+    std::size_t i = 0;
+    uint64_t carry = 0;
+    for (i = 0; i < y_len && i < x_len; i++)
+    {
+        uint64_t plus = y[i] + carry;
+        x[i] += plus;
+        
+        carry = (carry ? x[i] <= y[i] : x[i] < y[i]);
+    }
+    
+    if (i == y_len && i < x_len)
+    {
+        uint64_t plus = y_top + carry;
+        x[i] += plus;
+        
+        carry = (carry ? x[i] <= y_top : x[i] < y_top);
+        
+        i++;
+    }
+    else if (i < y_len && i == x_len)
+    {
+        uint64_t plus = y[i] + carry;
+        x_top += plus;
+        
+        carry = (carry ? x_top <= y[i] : x_top < y[i]);
+        
+        i++;
+    }
+    else
+    {
+        uint64_t plus = y_top + carry;
+        x_top += plus;
+        
+        carry = (carry ? x_top <= y_top : x_top < y_top);
+        
+        i++;
+    }
+    
+    for (; i < x_len && carry; i++)
+    {
+        x[i] += carry;
+        
+        carry = (x[i] < carry);
+    }
+    
+    if (i == x_len) x_top += carry;
+}
+
+// Assumes x >= y
+void gschool::sub_r(      uint64_t* x, const std::size_t x_len,       uint64_t& x_top,
+                    const uint64_t* y, const std::size_t y_len, const uint64_t y_top)
+{
+    std::size_t i = 0;
+    uint64_t borrow = 0;
+    for (i = 0; i < y_len && i < x_len; i++)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        x[i] -= minus;
+    }
+    
+    if (i == y_len && i < x_len)
+    {
+        uint64_t minus = y_top + borrow;
+        borrow = (borrow ? x[i] <= y_top : x[i] < y_top);
+        x[i] -= minus;
+        
+        i++;
+    }
+    else if (i < y_len && i == x_len)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x_top <= y[i] : x_top < y[i]);
+        x_top -= minus;
+        
+        i++;
+    }
+    else
+    {
+        uint64_t minus = y_top + borrow;
+        borrow = (borrow ? x_top <= y_top : x_top < y_top);
+        x_top -= minus;
+        
+        i++;
+    }
+    
+    for (; i < x_len && borrow; i++)
+    {
+        x[i] -= borrow;
+                
+        borrow = borrow && (x[i] == UINT64_MAX);
+    }
+    
+    if (i == x_len) x_top -= borrow;
+}
+
+// Assumes x >= y
+void gschool::sub_r2(const uint64_t* x, const std::size_t x_len, const uint64_t x_top, uint64_t* y, const std::size_t y_len, uint64_t& y_top)
+{
+    std::size_t i = 0;
+    uint64_t borrow = 0;
+    for (i = 0; i < y_len && i < x_len; i++)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x[i] <= y[i] : x[i] < y[i]);
+        y[i] = x[i] - minus;
+    }
+    
+    if (i == y_len && i < x_len)
+    {
+        uint64_t minus = y_top + borrow;
+        borrow = (borrow ? x[i] <= y_top : x[i] < y_top);
+        y_top = x[i] - minus;
+        
+        i++;
+    }
+    else if (i < y_len && i == x_len)
+    {
+        uint64_t minus = y[i] + borrow;
+        borrow = (borrow ? x_top <= y[i] : x_top < y[i]);
+        y[i] = x_top - minus;
+        
+        i++;
+    }
+    else
+    {
+        uint64_t minus = y_top + borrow;
+        borrow = (borrow ? x_top <= y_top : x_top < y_top);
+        y_top = x_top - minus;
+        
+        i++;
     }
 }

@@ -19,17 +19,57 @@ bool cmp::less_than(const std::vector<uint64_t> & x, const std::vector<uint64_t>
 
 bool cmp::less_than(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len)
 {
-    bool x_ref = (x_len >= y_len);
-    
-    const uint64_t* l = x_ref ? x : y;
-    const uint64_t* s = x_ref ? y : x;
-    
-    std::size_t l_len = x_ref ? x_len : y_len;
-    std::size_t s_len = x_ref ? y_len : x_len;
-    
-    int i;
-    for (i = (int)l_len-1; i >= s_len; i--) if (l[i] > 0)     return !x_ref;
-    for (                ; i >= 0;     i--) if (l[i] != s[i]) return x_ref ? l[i] < s[i] : l[i] > s[i];
+    if (x_len >= y_len)
+    {
+        int i;
+        for (i = (int)x_len-1; i >= y_len; i--) if (x[i] > 0)     return false;
+        for (                ; i >= 0;     i--) if (x[i] != y[i]) return x[i] < y[i];
+            
+        return false;
+    }
+    else
+    {
+        int i;
+        for (i = (int)y_len-1; i >= x_len; i--) if (y[i] > 0)     return true;
+        for (                ; i >= 0;     i--) if (x[i] != y[i]) return x[i] < y[i];
+            
+        return false;
+    }
+}
+
+bool cmp::less_than(const uint64_t* x, const std::size_t x_len, const uint64_t x_top, const uint64_t* y, const std::size_t y_len, const uint64_t y_top)
+{
+    if (x_len == y_len)
+    {
+        if (x_top != y_top) return x_top < y_top;
         
-    return false;
+        int i;
+        for (i = (int)x_len-1; i >= 0; i--) if (x[i] != y[i]) return x[i] < y[i];
+            
+        return false;
+    }
+    else if (x_len > y_len)
+    {
+        if (x_top > 0) return false;
+        
+        int i;
+        for (i = (int)x_len-1; i > y_len; i--) if (x[i] > 0)    return false;
+        if (x[i] != y_top)                                      return x[i] < y_top;
+        i--;
+        for (; i >= 0; i--) if (x[i] != y[i])                   return x[i] < y[i];
+            
+        return false;
+    }
+    else
+    {
+        if (y_top > 0) return true;
+        
+        int i;
+        for (i = (int)y_len-1; i > x_len; i--) if (y[i] > 0)    return true;
+        if (y[i] != x_top)                                      return x_top < y[i];
+        i--;
+        for (; i >= 0; i--) if (x[i] != y[i])                   return x[i] < y[i];
+            
+        return false;
+    }
 }

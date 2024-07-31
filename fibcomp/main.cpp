@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <chrono>
 #include <memory>
+#include <random>
 
 #include "fibonacci_rec.hpp"
 #include "fibonacci_rec_mem.hpp"
@@ -78,16 +79,25 @@ double  running_time_square(int n);
 int main(int argc, const char * argv[]) 
 {
     /*
-    std::vector<uint64_t> x = {1699028698ULL, 485256320ULL, 3855046228ULL, 18446744071392036848ULL, 18446744072149751478ULL, 18446744072113964571ULL};
-    std::vector<uint64_t> y = {5971734733ULL, 12887332767ULL, 18446744067320795577ULL, 18446744072240093012ULL, 3166167172ULL, 18446744067786812737ULL};
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<uint64_t> dist(0,0xFFFFFFFFFFFFFFFF);
     
-    std::vector<uint64_t> z_test = tomcook_new::mult(x, y);
+    
+    std::vector<uint64_t> x = {dist(gen), dist(gen), dist(gen), dist(gen), dist(gen), dist(gen)};
+    std::vector<uint64_t> y = {dist(gen), dist(gen), dist(gen), dist(gen), dist(gen), dist(gen)};
+    
+    std::cout << "x = " << uintinf_t(x).to_string() << std::endl;
+    std::cout << "y = " << uintinf_t(y).to_string() << std::endl << std::endl;
+    
+    std::vector<uint64_t> z_test = tomcook::mult(x, y);
     std::vector<uint64_t> z_ref = gschool::mult(x, y);
+
+    std::cout << "xy = " << uintinf_t(z_test).to_string() << std::endl;
+    std::cout << "xy = " << uintinf_t(z_ref).to_string() << std::endl << std::endl;
     
-    std::cout << uintinf_t(z_test).to_string() << std::endl << std::endl;
-    std::cout << uintinf_t(z_ref).to_string() << std::endl;
-    */
-     
+    std::cout << (uintinf_t(z_test).is_equal(z_ref) ? "GOOD" : "BAD") << std::endl;
+     */
     /*
     std::vector<uint64_t> x = {18446744072410102229ULL, 62842680ULL, 18446744071197053212ULL, 18446744072119826548ULL, 481772383ULL, 1135108698ULL};
     std::vector<uint64_t> y = {1123474284ULL, 1556066764ULL, 758249382ULL, 18446744072919408941ULL, 110934322ULL, 457361065ULL};
@@ -99,10 +109,10 @@ int main(int argc, const char * argv[])
     std::cout << uintinf_t(z_ref).to_string() << std::endl;
 */
     
-    //std::cout << running_time_mult(100) << std::endl;
-    test_mult_algo(1000);
+    std::cout << running_time_mult(10) << std::endl;
+    //test_mult_algo(1000);
     
-    test_square_algo(1000);
+    //test_square_algo(1000);
     //std::cout << running_time_square(100) << std::endl;
     
     /*
@@ -115,8 +125,8 @@ int main(int argc, const char * argv[])
     
     //compare_to_ref();
     
-    //FibonacciFmatTriangle algo;
-    //std::cout << running_time_high_precision(algo, 20000000, 1) << "s" << std::endl;
+    //FibonacciFmatMem algo;
+    //std::cout << running_time_high_precision(algo, 20000000, 10) << "s" << std::endl;
     
     return EXIT_SUCCESS;
 }
@@ -176,18 +186,21 @@ double running_time_high_precision(Fibonacci& algo, uint64_t n, uint64_t N)
 
 void test_mult_algo(int n)
 {
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<uint64_t> dist(0,0xFFFFFFFFFFFFFFFF);
+    
     bool all_check = true;
-    srand((unsigned)time(nullptr));
     for (int i = 0; i < n; i++)
     {
-        std::size_t x_len = 6 + rand()%1000;
-        std::size_t y_len = 6 + rand()%1000;
+        std::size_t x_len = 6 + dist(gen)%1000;
+        std::size_t y_len = 6 + dist(gen)%1000;
         
         std::vector<uint64_t> x(x_len);
         std::vector<uint64_t> y(y_len);
         
-        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
-        for (std::size_t i = 0; i < y_len; i++) y[i] = rand();
+        for (std::size_t i = 0; i < x_len; i++) x[i] = dist(gen);
+        for (std::size_t i = 0; i < y_len; i++) y[i] = dist(gen);
         
         std::vector<uint64_t> z_test = tomcook::mult(x, y);
         std::vector<uint64_t> z_ref = gschool::mult(x, y);
@@ -204,15 +217,18 @@ void test_mult_algo(int n)
 
 void test_square_algo(int n)
 {
+    std::random_device rd;
+    std::default_random_engine gen(rd());
+    std::uniform_int_distribution<uint64_t> dist(0,0xFFFFFFFFFFFFFFFF);
+    
     bool all_check = true;
-    srand((unsigned)time(nullptr));
     for (int i = 0; i < n; i++)
     {
-        std::size_t x_len = 6 + rand()%1000;
+        std::size_t x_len = 6 + dist(gen)%1000;
         
         std::vector<uint64_t> x(x_len);
         
-        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
+        for (std::size_t i = 0; i < x_len; i++) x[i] = dist(gen);
         
         std::vector<uint64_t> z_test = tomcook::square(x);
         std::vector<uint64_t> z_ref = gschool::square(x);
@@ -230,19 +246,24 @@ void test_square_algo(int n)
 
 double running_time_mult(int n)
 {
-    std::size_t x_len = 100000;
-    std::size_t y_len = 100000;
+    std::default_random_engine gen(0);
+    std::uniform_int_distribution<uint64_t> dist(0,0xFFFFFFFFFFFFFFFF);
+    
+    std::size_t x_len = 300000;
+    std::size_t y_len = 300000;
     
     std::vector<uint64_t> x(x_len);
     std::vector<uint64_t> y(y_len);
-    srand(0);
+    
+    for (std::size_t i = 0; i < x_len; i++) 
+    {
+        x[i] = dist(gen);
+        y[i] = dist(gen);
+    }
     
     auto T0 = std::chrono::steady_clock::now();
     for (int i = 0; i < n; i++)
     {
-        for (std::size_t i = 0; i < x_len; i++) x[i] = rand();
-        for (std::size_t i = 0; i < y_len; i++) y[i] = rand();
-        
         std::vector<uint64_t> z_test = tomcook::mult(x, y);
     }
     auto T1 = std::chrono::steady_clock::now();

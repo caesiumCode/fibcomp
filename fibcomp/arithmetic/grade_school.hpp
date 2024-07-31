@@ -1,6 +1,8 @@
 #ifndef grade_school_hpp
 #define grade_school_hpp
 
+#include <iostream>
+
 #include "bshift.hpp"
 #include "cmp.hpp"
 
@@ -42,6 +44,23 @@ void mult  (const uint64_t* x, const std::size_t x_len, const uint64_t* y, const
 
 void divide_by_3_r(uint64_t* x, const std::size_t x_len);
 
+/** specialisation for dealing with a splitted representation **/
+void add(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest, const std::size_t dest_len, uint64_t& c);
+void sub(const uint64_t* x, const std::size_t x_len, const uint64_t* y, const std::size_t y_len, uint64_t* dest, const std::size_t dest_len, uint64_t& c);
+void add_sgn(const bool, const uint64_t* x,    const std::size_t x_len,
+             const bool, const uint64_t* y,    const std::size_t y_len,
+                   bool&,      uint64_t* dest, const std::size_t dest_len, uint64_t& c);
+
+void add_r_sgn(     bool&,       uint64_t* x, const std::size_t x_len,      uint64_t& x_top,
+               const bool, const uint64_t* y, const std::size_t y_len, const uint64_t y_top);
+void add_r (      uint64_t* x, const std::size_t x_len,      uint64_t& x_top,
+            const uint64_t* y, const std::size_t y_len, const uint64_t y_top);
+
+void sub_r (      uint64_t* x, const std::size_t x_len,      uint64_t& x_top,
+            const uint64_t* y, const std::size_t y_len, const uint64_t y_top);
+
+void sub_r2(const uint64_t* x, const std::size_t x_len, const uint64_t x_top,
+                  uint64_t* y, const std::size_t y_len,      uint64_t& y_top);
 }
 
 #endif /* grade_school_hpp */

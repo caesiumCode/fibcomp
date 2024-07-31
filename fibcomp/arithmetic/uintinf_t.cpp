@@ -132,17 +132,17 @@ void swap(uintinf_t& x, uintinf_t& y)
 
 std::string uintinf_t::to_string() const
 {
-    
+    /*
     std::string s = std::to_string(m_digits[0]);
     for (std::size_t i = 1; i < m_digits.size(); i++) s += " + " + std::to_string(m_digits[i]) + " * B**" + std::to_string(i);
     return s;
+    */
     
-    /*
     std::string s = "{" + std::to_string(m_digits[0]) + "ULL";
     for (std::size_t i = 1; i < m_digits.size(); i++) s += ", " + std::to_string(m_digits[i]) + "ULL";
     s += "}";
     return s;
-    */
+    
 }
 
 uint64_t uintinf_t::to_uint64() const
